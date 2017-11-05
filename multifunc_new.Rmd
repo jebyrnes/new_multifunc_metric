@@ -1,6 +1,6 @@
 ---
 title: "A New Multifunc"
-output: github_document
+output: html_document
 ---
 ```{r libraries, include=FALSE, message=FALSE, warning=FALSE}
 library(multifunc)
