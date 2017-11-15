@@ -1,17 +1,6 @@
----
-title: "A New Multifunc"
-date: "`r format(Sys.time(), '%d %B, %Y')`" 
-output: 
-    html_document:
-      keep_md: yes
----
-```{r libraries, include=FALSE, message=FALSE, warning=FALSE}
-library(multifunc)
-library(tidyverse)
-library(ggplot2)
-library(viridis)
-library(gridExtra)
-```
+# A New Multifunc
+`r format(Sys.time(), '%d %B, %Y')`  
+
 
 #### Introduction
 
@@ -60,58 +49,7 @@ Why must we consider level of function and evenness together in one metric?  Fro
 
 [*I made a comment on the multifunc github repo - seems like one of the functions is hardwired to use an object called "duffy" from the code chunk below - that causes the compiliation to crash*]
 
-```{r show_conceptual, echo=FALSE, cache=TRUE, fig.width=10}
-#' Function to make data of all combinations
-#' of different levels of function, ranging from 
-#' 0 to 1 with a user defined step size
-make_data <- function(n=3, minVal = 0.01, ...){
-  amat <- as.tibble(matrix(rep(seq(minVal,1,...),n), ncol=n))
-  amat %>% expand.grid %>% as.tibble
-}
-
-fun_df <- make_data(n = 4, length.out=10) %>%
-  mutate(mf_a = rowMeans(.),
-         mf_even = even_fact(.))
-
-
-sim_plot <- ggplot(fun_df) +
-  theme_bw(base_size=14) +
-  aes(x=mf_a, y=mf_even, color=mf_a*mf_even) +
-  geom_point() +
-  geom_hline(yintercept=0.5, col="red", lty=2)+
-  geom_vline(xintercept=0.5, col="red", lty=2) +
-  scale_color_viridis(begin=0.3, option="B",
-                     guide=guide_colorbar("Multifunctionality")) +
-  xlab("Average Level of Functioning") +
-  ylab("Evenness of Functioning") +
-  ylim(c(0,1)) +
-  xlim(c(0,1))
-  
-
-concep_df <- crossing(mf_a=seq(0,1,length.out=400), 
-                      mf_e=seq(0,1,length.out=400)) %>%
-  filter(mf_e>=mf_a) %>%
-  filter(mf_e >=1/10)%>%
-  mutate(mf = mf_e * mf_a)
-
-concep_plot <- ggplot(concep_df, aes(x=mf_a, y=mf_e, fill=mf)) +
-  geom_raster(interpolate=TRUE) +
-  scale_fill_viridis(begin=0.3, option="B",
-                     guide=guide_colorbar("Multifunctionality"))+
-  scale_x_continuous(breaks = c(0, 1/10, 0.5, 1),
-                     labels = c(0, "1/S", 0.5, 1),
-                     lim=c(0,1), minor_breaks = NULL) +
-  scale_y_continuous(breaks = c(0, 1/10, 0.5, 1),
-                     labels = c(0, "1/S", 0.5, 1),
-                     lim=c(0,1), minor_breaks = NULL) +
-  geom_hline(yintercept=0.5, col="black", lty=2)+
-  geom_vline(xintercept=0.5, col="black", lty=2) +
-  theme_bw() +
-  xlab("Average Level of Functioning") +
-  ylab("Evenness of Functioning")
-
-grid.arrange(sim_plot, concep_plot, ncol=2)
-```
+![](multifunc_new_files/figure-html/show_conceptual-1.png)<!-- -->
 
 Further, having this single metric now allows us to begin to examine it as any other response variable. In the BEF world, we might look at additive partioning in addition to complementary overlap approaches. In global change biology, we can look at stability, resistance, and resilience. The options are open.
 
@@ -119,57 +57,11 @@ Further, having this single metric now allows us to begin to examine it as any o
 
 To see how this metric can be used, consider the example of Duffy et al. 2003. In this experiment, Duffy and colleagues sought to examine how biodiversity of grazers influences multiple different ecosystem functions in seagrass ecosystems. Using the functions discussed in the paper, we standardized and reflected them as per how Duffy et al. discuss their results. Comparing  M<sub>e</sub>, average functional performance, and functional evenness (Figure 2).
 
-```{r duffy, echo=FALSE}
-data("duffy_2003")
-
-duffyAllVars <- qw(grazer_mass,wkall_chla,tot_algae_mass,
-                  Zost_final_mass,sessile_invert_mass,sediment_C)
-
-duffyAllVars.std <- paste0(duffyAllVars, ".std")
-#re-normalize so that everything is on the same 
-#sign-scale (e.g. the maximum level of a function is the "best" function)
-#and the dataset is cleaner
-duffy <- duffy_2003 %>%
- dplyr::select(treatment, diversity, one_of(duffyAllVars)) %>%
- dplyr::mutate(wkall_chla = -1*wkall_chla + max(wkall_chla, na.rm=T),
-               tot_algae_mass = -1*tot_algae_mass + max(tot_algae_mass, na.rm=T)) 
-
-#first, mean multifunctionality
-duffy <- duffy %>%
- cbind(getStdAndMeanFunctions(duffy, duffyAllVars)) %>%
- dplyr::rename(`Average Function` = meanFunction, Richness=diversity)
-
-#now evenness
-duffy[["Functional Evenness"]] <- duffy %>% funcEven(duffyAllVars.std)
-
-#Now our multifunctionality metric - I could have
-#done this as a product, but I'm guessing people will want a function
-duffy$Multifunctionality <- duffy %>% getMF(duffyAllVars)
-
-duffy_for_plotting <- duffy %>%
- select(Richness, treatment, 
-        `Average Function`, `Functional Evenness`, Multifunctionality) %>%
- gather(index, value, -Richness, -treatment)
-
-ggplot(duffy_for_plotting,
-      aes(x=Richness, y=value)) +
- facet_wrap(~index) +
- geom_point() +
- theme_bw(base_size=17) +
- stat_smooth(method="lm", color="black") +
-  ylab("Value")
-```
+![](multifunc_new_files/figure-html/duffy-1.png)<!-- -->
 
 What is intriguing about this is that across the experiment, functional evenness remained high. However, when combined with average function, the slope appears slightly steeper than either of the two relationships - diversity's importance might well be gerater. Part of this might be driven by the positive correlation between the two variables given their functional constraint (Figure 3). [*I wonder if it would be helpful to provide the slopes of these relationships in the text - the reason I suggest that is because it is not immediately apparent from the figure that the 3rd panel has a steeper slope than the first 2, but that is part of the attraction of the method is that it combines both the effect on average function and on evenness*]
 
-```{r duffy_trdeoff, echo=FALSE}
-ggplot(duffy,
-       aes(`Average Function`, `Functional Evenness`, color=factor(Richness))) +
-  geom_point() +
-  theme_bw() +
-  ylim(c(0,1)) +
-  xlim(c(0,1))
-```
+![](multifunc_new_files/figure-html/duffy_trdeoff-1.png)<!-- -->
 
 Regardless, our results broadly reproduce the qualitative conclusions of Duffy et al. (2003) but with additional clarity, as they do for biodepth as well (SUPPLEMENT).
 [*so, do we want to include biodepth in the supplement or in the main text - it makes the paper seem beefier if we analyse both data sets in text - however, we can decide later*]
