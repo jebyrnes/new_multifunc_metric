@@ -4,7 +4,7 @@ date: "`r format(Sys.time(), '%d %B, %Y')`"
 author: Robert Bagchi
 output: 
   html_document:
-  keep_md: yes
+   keep_md: yes
 ---
 
 ## 1. Definitions
