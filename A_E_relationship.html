@@ -134,52 +134,75 @@ $(document).ready(function () {
 <h3>2. Calculated metrics</h3>
 <p>The terms above are then used to estimate a number of metrics, including:</p>
 <ol style="list-style-type: decimal">
-<li>The average level of theset of ecosystem functions considered. <span class="math display">\[ 
+<li><p>The average level of theset of ecosystem functions considered. <span class="math display">\[
+\tag{eq. 1}
 A = \frac{1}{S}\cdot{\sum_{i=1}^S {F_i}} 
-\]</span></li>
+\]</span></p></li>
 <li>The proportion of the total functioning contributed <span class="math display">\[
+\tag{eq. 2}
 p_i = \frac{F_i}{\sum_{i=1}^S{F_i}}
 \]</span></li>
 <li><p>The effective number of functions, <span class="math inline">\(^qN\)</span> <span class="math display">\[
+\tag{eq. 3}
 ^{q}N = \left(\sum_{i=1}^{S}p_{i}^q \right)^{1/(1-q)}
 \]</span> which can be converted into</p></li>
 <li><p>the evenness of functioning, <span class="math inline">\(^qE\)</span></p></li>
 </ol>
 <p><span class="math display">\[
+\tag{eq. 4}
 ^qE = {^qN}/S
 \]</span> ## 3. Examining the relationships</p>
-<p>The first thing we need to do is to incorporate <span class="math inline">\(A\)</span> into the equations for <span class="math inline">\(^qN\)</span> and <span class="math inline">\(^qE\)</span>. To do so, we first note that <span class="math inline">\(p_i\)</span> can be related to <span class="math inline">\(A\)</span> because:</p>
+<p>The first thing we need to do is to incorporate <span class="math inline">\(A\)</span> into the equations for <span class="math inline">\(^qN\)</span> and <span class="math inline">\(^qE\)</span>. To do so, we first note that <span class="math inline">\(p_i\)</span> can be related to <span class="math inline">\(A\)</span> using eq. 1 to express <span class="math inline">\(\sum_{i=1}^SF_i = AS\)</span> to replace the denominator of eq. 2 and get.</p>
 <p><span class="math display">\[
+\tag{eq. 5}
 p_i = \frac{F_i}{A \cdot S}
 \]</span></p>
 <p>This allows us to replace <span class="math inline">\(p_i\)</span> with a function of <span class="math inline">\(A\)</span> in subsequent equations. Thus, we get,</p>
 <p><span class="math display">\[
+\tag{eq. 6}
 ^{q}N = \left[\sum_{i=1}^{S}\left({\frac{F_{i}}{A \cdot S}}\right)^q \right]^{1/(1-q)}
-\]</span> Which can be simplified by removing the constants <span class="math inline">\(A\)</span> and <span class="math inline">\(S\)</span> out of the equation, as <span class="math display">\[
-^{q}N = \left[{\frac{S}{A^q \cdot S^{q}}} \cdot \sum_{i=1}^{S}F_{i}^q \right]^{1/(1-q)}
-\]</span> Because both <span class="math inline">\(q\)</span> and <span class="math inline">\(F_i\)</span> are always positive, we can express then <span class="math inline">\(^qE\)</span> as</p>
+\]</span> Which can be simplified by removing the constants <span class="math inline">\(A\)</span> and <span class="math inline">\(S\)</span> out of the parentheses. <span class="math display">\[
+\tag{eq. 7}
+^{q}N = \left[{\frac{1}{A^q \cdot S^{q}}} \cdot \sum_{i=1}^{S}F_{i}^q \right]^{1/(1-q)}
+\]</span> Because both <span class="math inline">\(q\)</span> and <span class="math inline">\(F_i\)</span> are always positive, we can express <span class="math inline">\(^qE\)</span> as</p>
 <p><span class="math display">\[
-\begin{aligned}  
+\begin{aligned} 
 ^{q}E &amp;= \frac{1}{S}\left[{\frac{1}{A^q \cdot S^{q}}} \sum_{i=1}^{S}F_{i}^q \right]^{1/(1-q)} \\
-&amp;\Rightarrow \frac{1}{S}\frac{(A \cdot S)^{1-q}}{A \cdot S}  \sum_{i=1}^{S}F_{i}^q ^{1/(1-q)} \\
-&amp;\Rightarrow \frac{A \cdot S}{S}\left[\frac{1}{A \cdot S} \cdot \sum_{i=1}^{S}F_{i}^q \right]^{1/(1-q)} \\
-&amp;\Rightarrow A \left[\frac{\cdot \sum_{i=1}^{S}F_{i}^q}{A \cdot S} \right]^{1/(1-q)}
+&amp;\Rightarrow \frac{1}{S}\left[{\frac{1}{A \cdot S}}\right]^{q/{1-q}}\left[ \sum_{i=1}^{S}F_{i}^q \right]^{1/(1-q)} \\
+&amp;\Rightarrow \left[ {\frac{1}{A^q \cdot S}}\sum_{i=1}^{S}F_{i}^q \right]^{1/(1-q)} \\
 \end{aligned}
 \]</span> From these formula, the relationship between <span class="math inline">\(^qE\)</span> and <span class="math inline">\(A\)</span> can be derived for specific values of <span class="math inline">\(q\)</span> as</p>
 <ul>
 <li>q = 0 (number of functions with non-zero provision)</li>
 </ul>
 <p><span class="math display">\[
-\begin{aligned}
-^{0}E = \cdot \sum_{i=1}^{S}F_{i}^0 = S
-\end{aligned}
-\]</span> * q = 2 (equivalent to Simpson’s index)</p>
+^{0}E = \frac{1}{S}\cdot \sum_{i=1}^{S}F_{i}^0 = 1
+\]</span> <strong>If</strong> I’ve got the maths right, then this is a way of checking!</p>
+<ul>
+<li>q = 2 (equivalent to Simpson’s index)</li>
+</ul>
 <p><span class="math display">\[
-^{2}E = \frac{A^{2}}{\sum_{i=1}^{S}F_{i}^2}
+^{2}E = \frac{S\cdot A^{2}}{\sum_{i=1}^{S}F_{i}^2}
 \]</span> * q = 1 (equivalent to Shannon’s entropy) The <span class="math inline">\(q = 1\)</span> case is a little trickier because of the need to use limits. Rather than use limits themselves here, we start off with the equation for the effective number of species for <span class="math inline">\(q = 1\)</span>, <span class="math inline">\(^1S = \exp(H) = \exp(-\sum_{i=1}^{S}{p_i \cdot \log{p_i}})\)</span>. We can then derive <span class="math inline">\(^1E\)</span> as:</p>
 <p><span class="math display">\[
-^1E = \frac{1}{S}\exp{\left[\sum_{i=1}^S{\frac{F_i}{A\cdot S}\cdot \log{\frac{F_i}{A \cdot S}}}\right]}
+\begin{align*}
+^1E &amp;= \frac{1}{S}\exp{\left[\sum_{i=1}^S{\frac{F_i}{A\cdot S}\cdot \log{\frac{F_i}{A \cdot S}}}\right]} \\
+&amp;\Rightarrow \frac{1}{S}\exp{\left[\frac{1}{A\cdot S}\sum_{i=1}^S{F_i \cdot 
+\left( \log F_i - \log{A \cdot S} \right)} \right]} \\
+\end{align*}
 \]</span></p>
+<p>To examine the relationship between A and E we need to find equations for the maximum and minimum of E for a given A. How you do that with the current equation however, is beyond me! <span class="citation">@jebyrnes</span></p>
+<p>I tried substituting <span class="math inline">\(\sum{F_i}\)</span> with <span class="math inline">\(c\)</span> and <span class="math inline">\(\sum{F_i\log F_i}\)</span> with <span class="math inline">\(d\)</span> and throwing it into Mathematica. Not sure that is kosher, but it was the best I could think of. We then get the derivative as:</p>
+<p><span class="math display">\[
+\begin{align*}
+\frac{dE}{dA} &amp;= \frac{1}{S}\exp \left[\frac{d-c\cdot \log (S\cdot A)}{SA} \right] 
+\cdot\left[\frac{ c\cdot (\log (S\cdot A) -1) - d}{S \cdot A^2}  \right]\\
+ &amp;\Rightarrow \frac{1}{S}\exp \left[\frac{\sum{F_i\log F_i}-\sum{F_i}\cdot \log (S\cdot A)}{SA} \right] 
+ \cdot \left[\frac{ \sum{F_i}\cdot (\log (S\cdot A) -1) - \sum{F_i\log F_i}}{S \cdot A^2}  \right]
+\end{align*}
+\]</span></p>
+<p>I don’t know how correct that is, and if anyone is better at the maths, please check what I’ve done. I have as much confidence in this as in the future prosperity of the human species…</p>
+<p>Armed with that equation, we can then set the rhs to 0 and solve to find out how the minimum (and maximum) changes with A. However, I don’t want to embark on this until someone has had chance to look at it. Could someone (<span class="citation">@jebyrnes</span>) take a look?</p>
 </div>
 </div>
 
