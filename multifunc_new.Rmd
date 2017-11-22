@@ -6,11 +6,16 @@ output:
       keep_md: yes
 ---
 ```{r libraries, include=FALSE, message=FALSE, warning=FALSE}
+#library(devtools)
+#install_github("multifunc", "jebyrnes")
+
 library(multifunc)
 library(tidyverse)
 library(ggplot2)
 library(viridis)
 library(gridExtra)
+
+source("Functions.R")
 ```
 
 #### Introduction
@@ -61,13 +66,6 @@ Why must we consider level of function and evenness together in one metric?  Fro
 [*I made a comment on the multifunc github repo - seems like one of the functions is hardwired to use an object called "duffy" from the code chunk below - that causes the compiliation to crash*]
 
 ```{r show_conceptual, echo=FALSE, cache=TRUE, fig.width=10}
-#' Function to make data of all combinations
-#' of different levels of function, ranging from 
-#' 0 to 1 with a user defined step size
-make_data <- function(n=3, minVal = 0.01, ...){
-  amat <- as.tibble(matrix(rep(seq(minVal,1,...),n), ncol=n))
-  amat %>% expand.grid %>% as.tibble
-}
 
 fun_df <- make_data(n = 4, length.out=10) %>%
   mutate(mf_a = rowMeans(.),
