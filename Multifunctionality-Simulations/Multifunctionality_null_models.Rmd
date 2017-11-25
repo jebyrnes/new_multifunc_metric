@@ -1,0 +1,419 @@
+---
+title: "Average and multithreshold approach with and w/o complementarity"
+output: html_document
+---
+
+```{r, include = FALSE}
+knitr::opts_chunk$set(echo = TRUE, warning = FALSE, message = FALSE)
+
+```
+
+This script produces:
+
++ Figure 1
+
+
+```{r, "load packages", message = FALSE}
+
+library(ggplot2)
+library(Cairo)
+library(grid)
+library(cowplot)
+library(dplyr)
+library(tidyr)
+library(corrplot)
+library(magrittr)
+library(multifunc)
+
+source("Multifunc_simulations_functions.R")
+```
+
+
+### Simulate diversity experiment
+
+In this script we set up the simulations for the null expectation of the new multifunctionality metrics and the average approach: 
+
++ the average multifunctionality approach
++ functional evenness
++ new_multifunc
+
+For this (and all other) simulations we set a number of species with the `specnum` parameter and a number of functions these species perform with the `funcnum` parameter. The function values for each species and functions are then drawn at random from a chosen distribution set by the `distribution` parameter. See `?Distributions` for possible choices and the required parameters. The default is a uniform distribution in the interval [0,1]. 
+
+With the species and function values defined, we simulate a diversity experiment where 
+
++ we have 1 : `specnum` richness levels
++ we have all possible combinations at each level (or a defined maximum of unique species combinations- set with `maxrep`; recommended for `specnum` > 12)
++ we need to choose a method for computing a mixture function value. 
+
+The possible methods are:
+
++ `av` for average. Here the mixture values at each diversity level are the unweighted single - species function values. So simply the mean (or average) value of the community.
+
++ `comp` for complementarity. Here one, several or all functions are multiplied with a complementary factor before the average is calculated. The complementary factor is always a saturating  function of the richness level of the form:
+
+$$ compfac = CF * ( 1 - ( 1 - \frac{1}{CF} ) * exp{ ( 1 - Richness ^ r )} $$
+
+  + `CF` : maximum value for the complementary factors as $S \to \inf$
+  + `r` *growthrate* i.e. the rate at which `compfac` grows to `CF`
+  + `compfunc` : the functions subjected to complementarity Either "all" or a subset of `func.names`
+  
+To make the analysis reproducible we can set a seed with `set.seed. 
+
+### Draw function values for all species
+
+`FunctionValue` takes three main arguments, `specnum`, `funcnum` and `distribution` and returns a data-frame with function values for all species and functions. 
+
+** If you change the distribution you have to change the distribution paramters in `FunctionValue`**
+
+```{r, "funcmat"}
+# set seed to replicate analysis:
+set.seed(999)
+
+# number of species
+specnum <- 12
+
+# number of functions
+funcnum <- 9
+
+# distribution from which to draw function values
+distribution = "rlnorm"
+
+#DF <- data.frame(seed = rep(NA, 100), mean = NA)
+
+
+# create function matrix
+FuncMat <- FunctionValue(specnum,funcnum, distribution, meanlog = 1, sdlog = 0.5)
+
+```
+
+### Plot function values and function correlations
+```{r, "corrplot"}
+
+FuncMat_plot <- 
+  FuncMat %>% 
+  group_by(Functions) %>% 
+  mutate(Funcval = (Funcval - min(Funcval)) / (max(Funcval) - min(Funcval))) %>% 
+  spread(Functions, Funcval) %>% 
+  select(-Species)
+  
+  
+FuncMat_plot %>% 
+  mutate(av = rowMeans(.)) %>%
+  as.matrix() %>% 
+  set_rownames(unique(FuncMat$Species)) %>%
+  corrplot( is.corr = F, tl.col = "black", cl.ratio = 0.2, 
+           cl.length = 11, method="square")
+
+FuncMat_plot %>% cor %>% 
+  corrplot(type = "lower", tl.col = "black", cl.ratio = 0.2, 
+           cl.length = 11, number.cex = 0.6, addCoef.col = "#323232", diag = F, method="ellipse")
+
+```
+
+
+## Scenario 1 - no diveristy effect on any single function
+
+### Simulate diversity experiment
+
++ `SpeciesMatrix` takes two arguments, `specnum`and `maxrep` and generates a *plot x species* matrix where each row is a *plot* and each column a *species*. Cell values are 0 or 1 and indicate which species are present in which plot. If `maxrep` is higher than `choose(specnum, floor(specnum/2))` (i.e. choose(12,6) = 924 possible combinations at richness level 6 for 12 species) all unique species combinations are simulated at each richness level. If `maxrep` is set to a lower number, a maximum of `maxrep` unique combinations are simulated for each richness level. 
+
++ `AverageFunction` takes the out put of `SpeciesMatrix` and `FunctionValue`, i.e. the plot x species matrix and the species - function data-frame simulated above, to calculate plot-wise functioning for all plots, given the chosen method (`av`or `comp`)
+
+```{r, "Avfunc"}
+# code takes ~5 min to run for 15 species. Set to lower value for higher number of species! 
+
+maxrep <- choose(specnum, floor(specnum/2))
+#maxrep <- 500
+
+# simulate plot x species matrix
+SpecMat <- SpeciesMatrix(specnum = specnum, maxrep = maxrep)
+
+# select method and additional parameters if appropriate by setting the `if` statement to `TRUE`
+if (TRUE) {method = "av"}
+
+if (FALSE) {method = "comp"
+            CF = 3
+            compfunc = c("F 1", "F 6")
+            r = 0.25}
+
+
+# Average function
+AvFunc <- AverageFunction(SpecMat, FuncMat,
+                          method = method, 
+                          CF = CF, 
+                          compfunc = compfunc,
+                          r = r)
+```
+
+### Standardize function values
+
+There are two main ways to standardize the function values:
+
++ between 0 and 1 with $x_{stand} = \frac{x - min(x)}{max(x) - min(x)}$ *this standardization stretches the function values artifically between 0 and 1 and is likely to skew the evenness. We should discourage it as Lars and I did previously*
+
++ by the maximum with $x_{stand} = \frac{x}{max(x)}$
+
+*we should briefly discuss z-cores as they are common (i.e. in that they don't work becaucse of frequencies (writing it down to think about it) and also standardization around 0 takes away the meaning of 0 = no functioning)*
+
+```{r, "standardize"}
+# extract function names
+func.names <- as.character( unique( FuncMat$Functions))
+
+# standardize by maximum
+ AvFunc[,func.names] <- apply(AvFunc[,func.names], 2, function(x) {x/max(x)})
+
+# alternative standardize between 0 and 1
+# AvFunc[,func.names] <- apply(AvFunc[,func.names], 2, function(x) {(x - min(x)) / (max(x) - min(x))})
+
+```
+
+### Plot single function values
+```{r, "single_func"}
+AvFunc_long <- gather(AvFunc[, -c(1:specnum)], Function, FuncVal, -Richness) 
+
+SingleFunc <- AvFunc_long %>%
+  mutate(FuncVal = round(FuncVal,3)) %>% 
+  group_by(Richness, Function, FuncVal) %>% 
+  summarize(n = n()) %>% 
+  ggplot(., aes(x=Richness, y=FuncVal, colour = n))+
+  geom_point( size = 1, position = position_jitter(width = 0.1))+
+  facet_wrap(~Function)+
+  theme_bw(base_size=15)+
+  stat_smooth(data = AvFunc_long, aes(x = Richness, y = FuncVal), method="lm", colour = "#de2d26") +
+  xlab("\nSpecies richness") +
+  ylab("Value of function\n") +
+  theme(panel.grid = element_blank(), legend.position = "none")
+
+SingleFunc
+
+```
+
+### Average approach for multifunctionality
+
++ Multifunctionality is calculated as the average value of the standardized single functions.
+
+```{r, "multifunc_av"}
+
+# add averaged multifunctional index
+AvFunc$meanFunction <- rowMeans(AvFunc[,func.names])
+
+# plot
+AverageFunc <- 
+  AvFunc %>%
+  select(Richness, meanFunction) %>% 
+  mutate(meanFunction = round(meanFunction,3)) %>% 
+  group_by(Richness, meanFunction) %>% 
+  summarize(n = n()) %>% 
+  ggplot(., aes(x=Richness, y=meanFunction, colour = n))+
+  geom_point(size = 2, position = position_jitter(width = 0.1))+
+    theme_bw(base_size=15)+
+    stat_smooth(data = AvFunc, aes(x = Richness, y = meanFunction), method="lm", colour = "#de2d26") +
+    xlab("\nSpecies richness") +
+    ylab("Average value of standardized functions\n")+
+  theme(legend.position = "none")+
+   # scale_y_continuous(limits = c(0.25,0.75))+
+    scale_x_continuous(breaks = seq(1,15,2))
+
+AverageFunc
+
+```
+
+### new multifunctionlity metric
+
+*code copied and adapted from multifunc_new.Rmd*
+
+```{r}
+#now evenness
+AvFunc[["Functional Evenness"]] <- AvFunc %>% funcEven(func.names)
+
+#Now our multifunctionality metric - I could have
+#done this as a product, but I'm guessing people will want a function
+AvFunc$Multifunctionality <- AvFunc %>% getMF(func.names)
+
+Multifunc_new <- 
+  AvFunc %>%
+  select(Richness, meanFunction, `Functional Evenness`, Multifunctionality) %>% 
+  gather(index, value, -Richness) %>% 
+  mutate(value = round(value, 2)) %>% 
+  group_by(value, Richness, index) %>% 
+  summarise(n = n()) %>% 
+  ggplot(., aes(x=Richness, y=value, colour = n))+
+  geom_point(size = 2, 
+             position = position_jitter(width = 0.1))+
+    theme_bw(base_size=15)+
+    stat_smooth( colour = "#de2d26", se = F) +
+    facet_wrap(~index)+ 
+    xlab("\nSpecies richness") +
+    ylab("Average value of standardized functions\n")+
+ # theme(legend.position = "none")+
+   # scale_y_continuous(limits = c(0.25,0.75))+
+    scale_x_continuous(breaks = seq(0,12,2))
+
+Multifunc_new
+```
+
+with effective number of functions
+
+```{r}
+
+AvFunc[["effectiveFunctions"]] <- AvFunc[,func.names] %>% multifunc::eff_div(q = 1)
+AvFunc <- mutate(AvFunc, newMF_effN = effectiveFunctions * meanFunction)
+
+Multifunc_new <- 
+  select(AvFunc, Richness, effectiveFunctions, newMF_effN, `Functional Evenness`) %>% 
+  gather(index, value, -Richness, -`Functional Evenness`) %>% 
+  ggplot(., aes(x=Richness, y=value, colour = `Functional Evenness`))+
+  geom_point(size = 2, 
+             position = position_jitter(width = 0.1))+
+  facet_wrap(~index)+
+    theme_bw(base_size=15)+
+    stat_smooth( colour = "#de2d26", se = F) +
+    xlab("\nSpecies richness") +
+    ylab("Average value of standardized functions\n")+
+ # theme(legend.position = "none")+
+   # scale_y_continuous(limits = c(0.25,0.75))+
+    scale_x_continuous(breaks = seq(0,12,2))+
+  scale_color_viridis()
+
+Multifunc_new
+```
+
+
+correlation between average MF and MF_new
+
+```{r}
+ggplot(AvFunc, aes(x = meanFunction, y = Multifunctionality))+
+  geom_point(alpha = 0.2)+
+  geom_smooth()
+```
+
+
+## Scenario 2 - complementarity effect on 2 functions
+
+Exact same code as above, but with the `method = "comp"` chosen to simulate complementary for two functions. 
+
+### Simulate diversity experiment
+
+
+```{r, "Avfunc_comp"}
+# code takes ~5 min to run for 15 species. Set to lower value for higher number of species! 
+
+#maxrep <- choose(specnum, floor(specnum/2))
+#maxrep <- 500
+
+# simulate plot x species matrix (If not allready done for Scenario 1)
+#SpecMat <- SpeciesMatrix(specnum = specnum, maxrep = maxrep)
+
+# select method and additional parameters if appropriate by setting the `if` statement to `TRUE`
+if (FALSE) {method = "av"}
+
+if (TRUE) {method = "comp"
+            CF = 3
+            compfunc = c("F 1", "F 6")
+            r = 0.25}
+
+
+# Average function
+AvFunc <- AverageFunction(SpecMat, FuncMat,
+                          method = method, 
+                          CF = CF, 
+                          compfunc = compfunc,
+                          r = r)
+```
+
+### Standardize function values
+
+```{r, "standardize_comp"}
+# extract function names
+func.names <- as.character( unique( FuncMat$Functions))
+
+# standardize by maximum
+ AvFunc[,func.names] <- apply(AvFunc[,func.names], 2, function(x) {x/max(x)})
+
+# alternative standardize between 0 and 1
+# AvFunc[,func.names] <- apply(AvFunc[,func.names], 2, function(x) {(x - min(x)) / (max(x) - min(x))})
+
+```
+
+### Plot single function values
+```{r, "single_func_comp"}
+AvFunc_long <- gather(AvFunc[, -c(1:specnum)], Function, FuncVal, -Richness) 
+
+SingleFunc_comp <- AvFunc_long %>%
+  mutate(FuncVal = round(FuncVal,3)) %>% 
+  group_by(Richness, Function, FuncVal) %>% 
+  summarize(n = n()) %>% 
+  ggplot(., aes(x=Richness, y=FuncVal, colour = n))+
+  geom_point( size = 1, position = position_jitter(width = 0.1))+
+  facet_wrap(~Function)+
+  theme_bw(base_size=15)+
+  stat_smooth(data = AvFunc_long, aes(x = Richness, y = FuncVal), method="lm", colour = "#de2d26") +
+  xlab("\nSpecies richness") +
+  ylab("Value of function\n") +
+  theme(panel.grid = element_blank(), legend.position = "none")
+
+SingleFunc_comp
+
+```
+
+### Average approach for multifunctionality
+```{r, "multifunc_av_comp"}
+
+# add averaged multifunctional index
+AvFunc$meanFunction <- rowMeans(AvFunc[,func.names])
+
+#plot it
+AverageFunc_comp <- 
+  AvFunc %>%
+  select(Richness, meanFunction) %>% 
+  mutate(meanFunction = round(meanFunction,3)) %>% 
+  group_by(Richness, meanFunction) %>% 
+  summarize(n = n()) %>% 
+  ggplot(., aes(x=Richness, y=meanFunction, colour = n))+
+  geom_point(size = 2, position = position_jitter(width = 0.1))+
+    theme_bw(base_size=15)+
+    stat_smooth(data = AvFunc, aes(x = Richness, y = meanFunction), method="lm", colour = "#de2d26") +
+    xlab("\nSpecies richness") +
+    ylab("Average value of standardized functions\n")+
+  theme(legend.position = "none")+
+   # scale_y_continuous(limits = c(0.25,0.75))+
+    scale_x_continuous(breaks = seq(1,15,2))
+
+AverageFunc_comp
+
+```
+
+### new multifunctionlity metric
+
+*code copied and adapted from multifunc_new.Rmd*
+
+```{r}
+#now evenness
+AvFunc[["Functional Evenness"]] <- AvFunc %>% funcEven(func.names)
+
+#Now our multifunctionality metric - I could have
+#done this as a product, but I'm guessing people will want a function
+AvFunc$Multifunctionality <- AvFunc %>% getMF(func.names)
+
+Multifunc_new_comp <- 
+  AvFunc %>%
+  select(Richness, meanFunction, `Functional Evenness`, Multifunctionality) %>% 
+  gather(index, value, -Richness) %>% 
+  mutate(value = round(value, 2)) %>% 
+  group_by(value, Richness, index) %>% 
+  summarise(n = n()) %>% 
+  ggplot(., aes(x=Richness, y=value, colour = n))+
+  geom_point(size = 2, 
+             position = position_jitter(width = 0.1))+
+    theme_bw(base_size=15)+
+    stat_smooth( colour = "#de2d26", se = F) +
+    facet_wrap(~index)+ 
+    xlab("\nSpecies richness") +
+    ylab("Average value of standardized functions\n")+
+ # theme(legend.position = "none")+
+   # scale_y_continuous(limits = c(0.25,0.75))+
+    scale_x_continuous(breaks = seq(0,12,2))
+
+Multifunc_new_comp
+```
+
