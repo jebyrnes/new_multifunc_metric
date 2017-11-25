@@ -24,6 +24,7 @@ library(tidyr)
 library(corrplot)
 library(magrittr)
 library(multifunc)
+library(viridis)
 
 source("Multifunc_simulations_functions.R")
 ```
