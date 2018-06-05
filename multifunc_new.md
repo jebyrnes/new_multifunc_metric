@@ -1,5 +1,10 @@
-# A New Multifunc
-`r format(Sys.time(), '%d %B, %Y')`  
+---
+title: "A New Multifunc"
+date: "05 June, 2018" 
+output: 
+    html_document:
+      keep_md: yes
+---
 
 
 #### Introduction
@@ -28,28 +33,53 @@ The definition of multifunctionality presents a challenge. How do we define a me
   
 This problem of assessing the distribution of differences across functions seems akin to the problem of capturing diversity of species within a community. We know the "richness" of functions - it is the total number of functions we are observing. This richness can be partitioned independently into evenness and a measure of compositional complexity (Jost 2010). In the diversity literature, this metric of complexity can be simply translated into an effective number of species, i.e., the number of equally abundant species that would produce the same metric (Jost 2006, 2010), via Hill Numbers. This concept of effective number of functions is equally powerful in the context of measuring multifunctionality. For some set of functions that have been standardized to a common scale (i.e., between 0 and 1) such that $F_{1,2,3...S}$ is their level of function
 
-$$p_i = \frac{F_i}{\sum F_i}$$
+$$
+\tag{eq. 1}
+p_i = \frac{F_i}{\sum F_i}
+$$
 
-$$^{q}N = (\sum_{i=1}^{S}p_{i}^q)^{1/(1-q)}$$
+$$
+\tag{eq. 2}
+^{q}N = \left(\sum_{i=1}^{S}p_{i}^q\right)^{1/(1-q)}
+$$
 
-where $N_q$ is the effective number of functions for some order q. Adapting from Jost (2006), if q = 0, this is the total number of functions, S. If q<1, then functions at low level dominate the calculation. For q = 1, the approximation of this function is equivalent to results from Shannon diversity for species. For q>1, higher functions are given greater weight. At q = 2, we get results that are equivalent to the equivalent number of functions calculated from Simpson's diversity. If one of our goals is to up-weight high performing functions, q=2 is a reasonable choice. However, to be conservative, q=1 is sufficient.
+where $N_q$ is the effective number of functions for some order q. Adapting from Jost (2006), if q = 0, this is the total number of functions, S. If q<1, then functions at low level dominate the calculation. For q = 1, the approximation of this function is equivalent to results from Shannon diversity for species, $^{1}N = exp(-\sum{p_i\;log \;p_i})$. For q>1, higher functions are given greater weight. At q = 2, we get results that are equivalent to the number of functions calculated from Simpson's diversity. If one of our goals is to up-weight high performing functions, q=2 is a reasonable choice. However, to be conservative, q=1 is sufficient.
 
 At this point, we can calculate evenness as this effective number of functions divided by the number of functions divided we are observing (Jost 2010). 
 
-$$E = \frac{^{q}N}{S}$$
+$$
+\tag{eq. 3}
+^{q}E = \frac{^{q}N}{S}
+$$
 
 Armed with functional evenness, effective number of functions, and average level of function, discussed previously and here defined as $A$, we can turn to creating a meaningful multifunctionality metric based on evenness. 
 
-$$M_e = E\, A$$
+$$
+\tag{eq. 4}
+M_e = E\, A
+$$
 
 This metric can also be rescaled back to units of number of functions by multiplying it by total number of functions providing an metric on the scale of the absolute number of functions, such that $M_f = M_e S$.
 
-Why must we consider level of function and evenness together in one metric?  From a convenience standpoint, a combined metric satisfies our definition of multfunctionality. More importantly, both metrics are non-independent (Figure 1A). Consider, for example, that it is not possible to have a patch where all functions are at their maximum, but is anything less than completely even. Similarly, a patch whose functions are maximally "even" - or all doing something different from one another - cannot by definition have the highest levels of average function. Indeed, if functional evenness is < 1, then by definition the average is bound to be less that 1. The lowest evenness possible is 1/S. We can visualize this in phase space as well (Figure 1b).
-
-**yeah, the linear case below works for q=2, but I need to see if there's a more general expression here. consider this a starting point**
+Why must we consider level of function and evenness together in one metric?  From a convenience standpoint, a combined metric satisfies our definition of multfunctionality. More importantly, both metrics are non-independent, with the upper limit of $^{q}E = 1$ and the lower limit is set by a combination of the produce of AS and $\lfloor AS \rfloor$ (see [Appendix 1](#Appendix1) and [Appendix 2](#Appendix2) for the derivations). 
 
 
-![](multifunc_new_files/figure-html/show_conceptual-1.png)<!-- -->
+
+
+![Relationship between Evenness of functions and average level of functions for 4 functions at q = 1,2,3, and 4.](multifunc_new_files/figure-html/show_conceptual_new-1.png)
+
+
+```r
+library(multifunc)
+z <- crossing(a=seq(0,1,.1), b = seq(0,1,.1), c = seq(0,1,.1), d = seq(0,1,.1))
+z$e <- even_fact(z)
+z$avg <- (z$a + z$b + z$c + z$d)/4
+z$m <- z$e * z$avg
+plot(e ~ avg, data=z)
+min(z$e)
+```
+
+
 
 Further, having this single metric now allows us to begin to examine it as any other response variable. In the BEF world, we might look at additive partioning in addition to complementary overlap approaches. In global change biology, we can look at stability, resistance, and resilience. The options are open.
 
@@ -111,3 +141,81 @@ One potential pitfall of this technique is to assume that it is robust to a rese
 #### Conclusions
 
 We hope that this piece will provide the field of multifunctionality with a way out of its current state of division and confusion. Further, we hope it provides food for additional theory that addresses the causes and consequences of ecosystem multifunctionality, something that is currently sorely lacking. We have been heartened by the idea leaving the cradle of the field of biodiversity and ecosystem function, and feel that it has the promise to provide a holistic unifying concept for anyone interested in capturing a snapshot of system dynamics in single meaningful metric.
+
+
+#### Appendix 1: Upper Limit of Multifunctional Evenness is 1 {#Appendix1}
+While eqn. 3 will always have a maximum upper bound of 1 at any level of averge level of functioning (i.e., all functions are performing at the same level), $^{q}E$ has a lower bound set by $A$. We can see this mathematically. We start by noting that
+
+$$
+\tag{eq. 5}
+p_i = \frac{F_i}{\sum_{i=1}^S{F_i}}
+$$
+
+Substituting this in for values of $p_i$ in eqn. 2, then pulling out constants we get 
+
+$$
+\tag{eq. 6}
+^{q}N = \left[{\frac{1}{A^q \cdot S^{q}}} \cdot \sum_{i=1}^{S}F_{i}^q \right]^{1/(1-q)}
+$$
+
+Given that the generalized mean for order q, which we'll call $^{q}A$ such that $^{1}A = A$ is defined as
+$$
+A_{q} = \left[ \frac{1}{S}\sum_{i=1}^{S}F_{i}^q\right]^{1/q} 
+$$
+
+Leading to 
+
+$$
+\sum_{i=1}^{S}F_{i}^q = A_{q}^qS
+$$
+
+Then we can substitute this into the equation 6, now denoting the arithmetic mean as $A_1$ such that
+
+$$
+\begin{aligned} 
+^{q}N &= \left[A_{q}^q \cdot A_1^{-q} \cdot S^{1-q} \right]^{1/(1-q)} \\
+&\Rightarrow S\left[A_{q}^q \cdot A_1^{-q} \right]^{1/(1-q)}
+\end{aligned} 
+$$
+
+Assuming that $q \le 1$, the generalized mean inequality states thatfor q $\ge$ 1, $A_1 \le \ A_q$. When all functions perform leading to the same level,  $A_1 = \ A_q$, leading to $^{q}N = S$ and thus $^{q}E = 1$
+
+#### Appendix 2: Lower Limit of Multifunctional Evenness {#Appendix2}
+As the lower portion of the curve occurs at minimum evenness (i.e., maximum dominance), it is constrained at a lower bound given that we know the average of all functions. For example, for a set of functions where $0 < A  \le 1/S$, all functions save one are 0 and for the remaining function, $0 < F_S \le 1$. If $1/S < A \le 2/S$, then $F_{S-1} = 1$, $0 < F_{S-1} \le 1$, and $F_1...F_{S-2} = 0$. Thus, for any number of functions, S, and any average level of functions, A, where $0 \le F_i \le 1$, if we define $g = \lfloor AS \rfloor$
+
+**NOTE TO SELF, CHECK SUBSCRIPTS**
+$$
+\begin{aligned} 
+&F_{1}...F_{S-g-1} = 0 \\
+&F_{S-g} = AS - \lfloor AS \rfloor \\
+&F_{S-g+1}...F_{S} = 1
+\end{aligned} 
+$$
+
+Plugging this into equation 6, we get
+
+$$
+\tag{eq. 7}
+^{q}N_{lower} = \left[{A^{-q} \cdot S^{-q}} (\lfloor AS \rfloor + F_{S-g}\;^q) \right]^{1/(1-q)}
+$$
+
+For q=1, we can begin by re-arranging the limit using a substition from equation 5.
+
+$$
+\begin{aligned}
+&^{1}N_{lower} = exp\left(-\sum p_i \;log\; p_i\right) \\
+&\Rightarrow exp\left(-\sum \frac{F_i}{AS} \;log\; \frac{F_i}{AS}\right)\\
+&\Rightarrow exp\left(-\frac{1}{AS}  \sum (F_i \; log \; F_i \; - F_i\; log \; AS)\right) \\
+\end{aligned}
+$$
+
+We can use the same approach as before, taking 0 log 0 = 0, to get a lower limit for q=1 as
+
+$$
+\begin{aligned}
+&^{1}N_{lower} = exp\left(\lfloor AS \rfloor\frac{log AS}{AS} + \frac{log AS}{AS}(AS-\lfloor AS \rfloor) - \frac{(AS-\lfloor AS \rfloor)}{AS}(AS-\lfloor AS \rfloor) \right) \\
+&\Rightarrow \frac{-AS(AS-\lfloor AS \rfloor)^\frac{(AS-\lfloor AS \rfloor)}{AS}}{(\lfloor AS \rfloor - AS)}
+\end{aligned}
+$$
+
+When $AS-\lfloor AS \rfloor = 0$, this reduces to $AS ^ {\frac{\lfloor AS \rfloor}{AS}}$.
