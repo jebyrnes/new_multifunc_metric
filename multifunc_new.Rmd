@@ -74,9 +74,7 @@ $$
 
 This metric can also be rescaled back to units of number of functions by multiplying it by total number of functions providing an metric on the scale of the absolute number of functions, such that $M_f = M_e S$.
 
-Why must we consider level of function and evenness together in one metric?  From a convenience standpoint, a combined metric satisfies our definition of multfunctionality. More importantly, both metrics are non-independent, with the upper limit of $^{q}E = 1$ and the lower limit is set by a combination of the produce of AS and $\lfloor AS \rfloor$ (see [Appendix 1](#Appendix1) and [Appendix 2](#Appendix2) for the derivations). 
-
-
+Why must we consider level of function and evenness together in one metric?  From a convenience standpoint, a combined metric satisfies our definition of multfunctionality. More importantly, both metrics are non-independent, with the upper limit of $^{q}E = 1$ and the lower limit is set by a combination of the produce of AS and $\lfloor AS \rfloor$ (Figure 1) with an absolute lower limit to evenness set at 1/S which is maintained until the $MF_A$ reaches 1/S. See [Appendix 1](#Appendix1) and [Appendix 2](#Appendix2) for discussion and derivations. 
 
 
 ```{r show_conceptual_new, echo=FALSE, cache=TRUE, fig.cap = "Relationship between Evenness of functions and average level of functions for 4 functions at q = 1,2,3, and 4."}
