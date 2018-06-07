@@ -25,7 +25,7 @@ First, on the side of simplicty, taking the average of all functions [e.g., @Mae
 
 Second, we have metrics of the Multivariate Diversity Interactions framework [@Dooley:2015em]. This elegant framework allows us to tease apart the importance of correlations between functions and the contribution of different drivers to simultaneous change in those functions. It does not, however, provide a holistic metric of multifunctionality *per se*, much like the overlap approach before it [@Hector:2007gm] which is really a generalization of Sørenson overlap to provides key information on redundancy versus unique contributions of species. While we gain rich information about a system, we do not gain holistic interpretability.
 
-Last, we have the multiple threshold approach. This approach seeks to balance the goals of measuring the simultaneous performance of multiple ecosystem functions with the arbitrariness of choosing a threshold of relevance for those functions. We note that many who use it simply choose a single threshold, although present many in their appendicies (e.g., SOMEONE). This is a reasonable choice in order to understand a single set of observations. Further, for those who do look at all thresholds, the results are, frankly, difficult to interpret as the quantities they yeild are non-obvious in their links to the concept of multifunctionality. The approach yields rich information about multifunctionality *sensu stricto*, but in so doing, becomes unweildy for most if not all who choose to use it. Related, more recent efforts have sought to use dimensionality-reducing techniques which has yielded metrics that while useful lack interpretable meaning (Weigelt et al. 2017)
+Last, we have the multiple threshold approach. This approach seeks to balance the goals of measuring the simultaneous performance of multiple ecosystem functions with the arbitrariness of choosing a threshold of relevance for those functions. We note that many who use it simply choose a single threshold, although present many in their appendicies [e.g., @Hensel:wd]. This is a reasonable choice in order to understand a single set of observations. Further, for those who do look at all thresholds, the results are, frankly, difficult to interpret as the quantities they yeild are non-obvious in their links to the concept of multifunctionality. The approach yields rich information about multifunctionality *sensu stricto*, but in so doing, becomes unweildy for most if not all who choose to use it. Related, more recent efforts have sought to use dimensionality-reducing techniques which has yielded metrics that while useful lack interpretable meaning [@Meyer:2017gj].
 
 How can we solve this? What is a good metric of multifunctionality that yields the information we need in a proper holistic fashion such that we might even ultimately link it back to theory?
 
@@ -33,7 +33,7 @@ How can we solve this? What is a good metric of multifunctionality that yields t
 
 The definition of multifunctionality presents a challenge. How do we define a metric that captures both the level of performance of a broad suite of functions as well as the distribution of differences in performance between functions? The issue of total level of performance is easily linked to thinking about total community size. In our case, a simple averaging across functions should suffice and addresses the level of performance across the whole community of functions. This leaves open the question of how this average is distributed across functions.  
   
-This problem of assessing the distribution of differences across functions seems akin to the problem of capturing diversity of species within a community. We know the "richness" of functions - it is the total number of functions we are observing. This richness can be partitioned independently into evenness and a measure of compositional complexity [@Jost:2010jo]. In the diversity literature, this metric of complexity can be simply translated into an effective number of species, i.e., the number of equally abundant species that would produce the same metric [@Jost:2006fr; @Jost:2010jo], via Hill Numbers. This translates beautifully to the concept of measuring the **effective number of functions** provided by an area as a measure of multifunctionality. For some set of functions that have been standardized to a common scale (i.e., between 0 and 1) such that $F_{1,2,3...S}$ is their level of function
+This problem of assessing the distribution of differences across functions seems akin to the problem of capturing diversity of species within a community. We know the "richness" of functions - it is the total number of functions we are observing. This richness can be partitioned independently into evenness and a measure of compositional complexity [@Jost:2010jo]. In the diversity literature, this metric of complexity can be simply translated into an effective number of species, i.e., the number of equally abundant species that would produce the same metric [@Jost:2006fr; @Jost:2010jo], via Hill Numbers. This translates beautifully to the concept of measuring the **effective number of functions** provided by an area as a measure of multifunctionality. For some set of functions that have been standardized to a common scale (i.e., between 0 and 1) and defining $F_{1,2,3...S}$ as their level of function
 
 $$
 \tag{eq. 1}
@@ -69,16 +69,6 @@ Why must we consider level of function and evenness together in one metric? Firs
 ![<b>Figure 1.</b> Relationship between Evenness of functions and average level of functions for 4 functions at q = 1,2,3, and 4.](multifunc_new_files/figure-html/show_conceptual_new-1.png)
 
 
-```r
-library(multifunc)
-z <- crossing(a=seq(0,1,.1), b = seq(0,1,.1), c = seq(0,1,.1), d = seq(0,1,.1))
-z$e <- even_fact(z)
-z$avg <- (z$a + z$b + z$c + z$d)/4
-z$m <- z$e * z$avg
-plot(e ~ avg, data=z)
-min(z$e)
-```
-
 
 
 More importantly, a combined metric satisfies our definition of multfunctionality. High numbers imply both high level of function and high evenness. Low number imply that, even if a single function is being optimized, the assemblage of functions as a whole is not performing well. The relationship can also be easily decomposed into its constiuent parts for a more mechanistic examination of its behavior.
@@ -87,58 +77,48 @@ Last, from a convenience standpoint, having this single metric now allows us to 
 
 #### Application to real data
 
-To see how this metric can be used, consider the example of Duffy et al. 2003. In this experiment, Duffy and colleagues sought to examine how biodiversity of grazers influences multiple different ecosystem functions in seagrass ecosystems. Using the functions discussed in the paper, we standardized and reflected them as per how Duffy et al. discuss their results. Comparing  M<sub>e</sub>, average functional performance, and functional evenness (Figure 2).
+To see how this metric can be used, consider the example of Duffy et al. 2003. In this experiment, Duffy and colleagues sought to examine how biodiversity of grazers influences multiple different ecosystem functions in seagrass ecosystems. Using the functions discussed in the paper, we standardized and reflected them as per how Duffy et al. discuss their results. We then compare average functional performance, functional evenness with q=1, and our new multifunctionality metric (Figure 2).
 
-![](multifunc_new_files/figure-html/duffy-1.png)<!-- -->
+![<b>Figure 2.</b> Three ways of looking at multifunctionality in Duffy et al. 2003. based on Periphyton biomass (wall chlorophyll a), total algal mass, grazer mass, <i>Zostera</i> final mass, sessile invertebrate mass, and sediment carbon. Colors denote different species combinations. Points are jittered horizontally to reveal overlapping data points.A) Average level of standardized functions. B) Multifunctional evenness calculated at q=1 (i.e., using Shannon Effective Number of Species). C) Multifunctionality, as defined by the product of evenness and average function.](multifunc_new_files/figure-html/duffy-1.png)
 
 
-```r
-duffy_coefs <- duffy_for_plotting %>%
-  group_by(index) %>%
-  nest() %>%
-  mutate(mod = map(data, ~lm(value ~ Richness, data=.))) %>%
-  mutate(coefs = map(mod, ~tidy(.))) %>%
-  unnest(coefs) %>%
-  ungroup() %>%
-  filter(term == "Richness") %>%
-  mutate(estimate = round(estimate, 4),
-         std.error = round(std.error, 4)) %>%
-  select(-statistic, -p.value)
+Index                 Predictor    Slope Estimate       SE
+--------------------  ----------  ---------------  -------
+Average Function      Richness             0.0261   0.0080
+Functional Evenness   Richness             0.0130   0.0064
+Multifunctionality    Richness             0.0294   0.0092
 
-knitr::kable(duffy_coefs)
-```
+Comparing the three, we see that MF<sub>A</sub> and our multifunctionality metric produce broadly similar results. This result is due to evenness of function being high across most of the experiment.  Thus, the slope of the multifunctionality relationship remains tied to the average (Figure 2, Table 1). Where we do see evenness making a difference is in the lower richness plots, some of which are downweighted given their low evenness, potentially making the strength of the richness-multifunctionality relationship subtly stronger (i.e., steeper slope). Our results broadly reproduce the qualitative conclusions of Duffy et al. (2003). However, they reveal that multiple species drive multifunctionality largely from driving up the average of all functions with only small, if any, effects on functional evenness.
 
 
 
-index                 term        estimate   std.error
---------------------  ---------  ---------  ----------
-Average Function      Richness      0.0261      0.0080
-Functional Evenness   Richness      0.0130      0.0064
-Multifunctionality    Richness      0.0294      0.0092
 
-What is intriguing about this is that across the experiment, functional evenness remained high. Thus, the slope of the multifunctionality relationship remains tied to the average (Figure 3, Table 1). Further, we can see the positive correlation between the two variables given their functional constraint (Figure 3). 
-
-![](multifunc_new_files/figure-html/duffy_trdeoff-1.png)<!-- -->
-
-Regardless, our results broadly reproduce the qualitative conclusions of Duffy et al. (2003) but with additional clarity, as they do for biodepth as well (SUPPLEMENT).
-[*so, do we want to include biodepth in the supplement or in the main text - it makes the paper seem beefier if we analyse both data sets in text - however, we can decide later*]
+[*DO WE WANT TO INCLUDE BIODEPTH, TOO?*]  
+[*DO WE WANT TO LOOK AT THE CORRELATION BETWEEN MFA AND MFE IN MORE DETAIL? I USED TO, BUT I DON'T THINK YOU GAIN ANYTHING*]  
+[*SHOULD I ELABORATE WITH MORE TEXT?*]  
 
 #### Robutness of metric
 # FABIAN DO MAGIC HERE
 
+#### A note on standardization
+
+As pointed out in discussions of multifunctionality, how functions are standardized matters [@Manning:2018bk]. First is the choice of direction - what implies positive function? When services are being examined explicitly, this is hopefully a straightforward choice - although consider tradeoffs between nutrient cycling rates and storage as a tricky context. Further, not all functions are equally important, particularly in the case of management. Fortunately, choosing an 'optimal' level of function to link to 1 can alleviate this (e.g., if 25% of  function is sufficiently high, 25% or higher can be considered a '1'). Functions can also be upweighted or downweighted in the calculation of MF<sub>A</sub> of $^qN$ (constrained to ensure $\sum p_i = 1$). These choices should be simple to justify with sufficient system-specific context.
+
 #### A note on correlated functions
 
-A great deal of the confusion in the multifunctionality literature even when using metrics has sprung from the issue of correlation between functions [@Bradford:2014hd; @Byrnes:2014kv; @Bradford:2014cr]. In no small part this is likely due to the incessant focus on accounting for correlation in areas such as spatial and temporal analysis. To have correlations between functions seems to somehow either "contaminate" results and make them suspect or, for others, only correlated functions are valid to indicate multifunctionality (PNAS ref). Neither of these are strictly true. 
+A great deal of the confusion in the multifunctionality literature even when using metrics has sprung from the issue of correlation between functions [@Bradford:2014hd; @Byrnes:2014kv; @Bradford:2014cr]. In no small part this is likely due to the incessant focus on accounting for correlation in areas such as spatial and temporal analysis. To have correlations between functions seems to somehow either "contaminate" results and make them suspect or, for others, only correlated functions are valid to indicate multifunctionality [@@Bradford:2014hd]. Neither of these are strictly true. 
 
-The difficulty comes down to defining just what a "function" is. This semantic argument has led down the path of considering "true" functions as the single response to a driver that gives rise to all other responses. Consider the example of aboveground and belowground production in plants. The two are driven by similar, if not mutually overlapping, biological processes. Thus, are they truly separate functions? If biological reductionism in functional space is the goal of a researcher, then dimensional reduction techniques before analysis would seem to be in order. We offer a caution, however, that techniques such as PCA reduce dimensions with no basis in biology. While they are useful  in terms of compressing information and addressing the problem in creating a multifunctionality metric that can be used [Meyer:2017gj], there is no inherent meaning in their outputs. Moreover, the formulae are dependent on the data used to create the PCA, and thus difficult to generalize across studies. Rather, Confirmatory Factor Analysis [@Brown:2012vc] with a meaningful underlying factor structure might provide a far more useful and biologically meaningful option. Further, it can be tested for measurement invariance, and as such can be shown to be generalizable across studies with the same functions measured.
+The difficulty comes down to defining just what a "function" is, as excellently discussed by Manning and colleagues [@Manning:2018bk]. This semantic argument has led down the path of considering "true" functions as the single response to a driver that gives rise to all other responses. Consider the example of aboveground and belowground production in plants. The two are driven by similar, if not mutually overlapping, biological processes. Thus, are they truly separate functions? If biological reductionism in functional space is the goal of a researcher, then dimensional reduction techniques before analysis would seem to be in order. We offer a caution, however, that techniques such as PCA reduce dimensions with no basis in biology. While they are useful  in terms of compressing information and addressing the problem in creating a multifunctionality metric that can be used [Meyer:2017gj], there is no inherent meaning in their outputs. Moreover, the formulae are dependent on the data used to create the PCA, and thus difficult to generalize across studies. Manning et al. suggest cluster analysis [@Manning:2018bk] for all ecosystem function based multifunctionality analysis (as opposed to service based). This form of analysis is still based on *de novo* groups generated by the data rather than from *a priori* knowldge of the biology of the system. We suggest, rather, Confirmatory Factor Analysis [@Brown:2012vc] with a meaningful underlying factor structure might provide a far more useful and biologically meaningful option. Further, it can be tested for measurement invariance, and as such can be shown to be generalizable across studies with the same functions measured, solving problems of study specificity [@Manning:2018bk].
 
-In contrast, when we consider an ecosystem function as a measurement of some flux within an ecosystem, the issue of correlation becomes moot. Was there a flux, or was there not a flux? Was that flux uniquely relevant to some other ecosystem processes? Similarly, managers have goals that focus on functions and services that are independent of any biological reductionism. Hence, sweeping this correlation under the rug for a single metric of multifunction is not only acceptable, but desirable in terms of defining a clear metric of the concept. 
+Must we always cluster? Managers have goals that focus on functions and services that are independent of any biological reductionism - so called ecosystem-service based multifunctionality [@Manning:2018bk]. In this case, sweeping this correlation under the rug for a single metric of multifunction is not only acceptable, but desirable in terms of defining a clear metric for management. This view need not be limited to management, however. If researchers are working with a well-defined set of functions that are representative of an ecosystem state (see below) or answering a theoretical question, then clustering is not necessary.
 
-That said, this point of view treats correlation between functions as if they are static. Indeed, if a driver increases multifunctionality, then it is pushing multiple functions to higher levels at the same time. It's not only plausible but possible that in highly multifunctional systems, functions are more highly correlated when function is low. If researchers are interested in exploring the correlation structure of functions - or even how that structure changes across treatments (something to our knowledge that has not been done) - then that is a separate piece of a good ecological story. To our knowledge, this has not been robustly explored, nor is there a solid body of theory addressing this phenomen of multifunctional correlation. Perhaps it is time to explore it further. Regardless, even changing correlation across levels of a driver does not invalidate any metric of multifunctionality seeking to capture simultaneous change in multiple functions. It comes down to a researchers question and how that question forces them to define functions. This is an epistomological point beyond the scope of any metric.
+Further, clustering by default treats correlation between functions as if they are static. Consider, however, that if a driver increases multifunctionality, then it is pushing multiple functions to higher levels at the same time. Our results show that systems with higher average levels of function also are constrained to have higher evenness, and thus higher correlation between functions. Thus in highly multifunctional systems, functions are more highly correlated when function is low often by definition. This means that results from clustered analysis considering all treatments could produce innacurate representations of the system, as cluster structure might be dependent on treatment itself. This is a particularly pernicious problem for techniques that do not rely on *a priori* cluster definitions - but would affect CFA results as well.
+
+If researchers are interested in exploring the correlation structure of functions - or even how that structure changes across treatments (something to our knowledge that has not been done) - then that is a separate piece of a good ecological story. To our knowledge, this has not been robustly explored, nor is there a solid body of theory addressing this phenomen of multifunctional correlation. Perhaps it is time to explore it further. Regardless, even changing correlation across levels of a driver does not invalidate any metric of multifunctionality seeking to capture simultaneous change in multiple functions. It comes down to a researchers question and how that question forces them to define functions. This is an epistomological point beyond the scope of any metric.
 
 #### Thinking Beyond Measured Functions
 
-One potential pitfall of this technique is to assume that it is robust to a researchers choice in what functions to measure in terms of the inferences it can deliver about a system. In an ideal world, when we quantify multifunctionality we would think of all possible functions as a population. We would then measure a random (or stratified!) sample of functions in order to draw good inferences about how a driver influences system-wide multifunctionality. To our knowledge, this type of careful thought about relevant functions from a population sampling perspective has never been applied in multifunctionality research. We hope we are wrong about this, and applaud anyone who has done so. Recently, several excellent guides to standardized measuring of relevant ecosystem functions have begun to appear in the literature (TWO TREE PAPERS). We suggest these as a starting point for any researchers interested in thinking carefully about the topic, in addition to fruitful discussions of with ecosystem ecologists working in the same system. They are highly likely to disabuse any community ecologist of the notion that they have fully captures a good sample of the population of relevant functions, and provide guidance on further ways to do so (J. Bowen, pers. com.).
+One potential pitfall of this technique is to assume that it is robust to a researchers choice in what functions to measure in terms of the inferences it can deliver about a system. In an ideal world, when we quantify multifunctionality we would think of all possible functions as a population. We would then measure a random (or stratified!) sample of functions in order to draw good inferences about how a driver influences system-wide multifunctionality. To our knowledge, this type of careful thought about relevant functions from a population sampling perspective has never been applied in multifunctionality research. We hope we are wrong about this, and applaud anyone who has done so. Recently, several excellent guides to selecting standardized sets of relevant ecosystem functions have begun to appear in the literature [@Meyer:2015go; @Lefcheck:2016ho]. We suggest these as a starting point for any researchers interested in thinking carefully about the topic, in addition to fruitful discussions of with ecosystem ecologists working in the same system. They are highly likely to disabuse any community ecologist of the notion that they have fully captured a good sample of the population of relevant functions, and provide guidance on further ways to do so (J. Bowen, pers. com.).
 
 #### Conclusions
 
