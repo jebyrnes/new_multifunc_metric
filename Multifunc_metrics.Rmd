@@ -1,6 +1,80 @@
 ---
-title: "Multifunctionaöoty metrics - description & critisism"
+title: "Multifunctionality metrics - description & critisism"
 author: "Fabian Roger"
 date: "`r format(Sys.time(), '%d %B, %Y')`" 
-output: html_document
+bibliography: mf_metric.bib
+csl: oikos.csl
+output: 
+    html_document:
+      keep_md: yes
 ---
+
+# Overlap methods
+
+
++ [@Hector:2007gm]
+
+> At each site, we identified the most parsimonious set of species influencing each ecosystem function using a back- ward-elimination multiple regression analysis to identify a minimally adequate model based on AIC.
+
+> We identified the single most important species affecting each process from the multiple regression minimally adequate model estimates, and calculated a simple measure of turnover as the proportion of ecosystem processes with different most-important species (the number of processes divided by the number of different species; where the maximum possible value of 1 indicates that the identity of the most important species differs for each process).
+
+> We took the subsets of species that had detectable and desirable effects on the ecosystem process (or combination of processes) in question at each site, and calculated how many species affected functioning for every possible combination of ecosystem processes (that is, all pair-wise combinations, each combina- tion of three, and so on)
+
++ [@Gamfeldt:2008tqa]
+
+> a decline in one function cannot be compensated by an increase in another function. We therefore must define some level of each function that we find acceptable. When one function drops beneath this level, overall ecosystem functioning is no longer sustained.
+
+> Second, we use a 0.5 threshold for assessing a single ecosystem function to be performed sufficiently within an ecosystem. 
+
++ [@Zavaleta:2010bn]
+
+> We assessed the ability of communities to achieve multifunctionality thresholds (T), which we defined as a set percentage of each function’s observed maximum value (e.g., T5 = 30% of maximum value for each of five functions)
+> What minimum species richness was required for most (>50%) assemblages at each richness level to exceed multifunctionality thresholds
+
++ [@Mouillot:2011fi]
+
+> We also calculated a multifunctionality variable as the mean performance of communities over the four processes after standardizing each community performance (mean of 0 and standard deviation of 1) in order to give them the same weight.
+
++ [@Isbell:2011js]
+
+> we modelled ecosystem functioning response variables as a function of the pres- ence or absence of each study species at the plot level. We used backward- elimination multiple regression to identify a minimally adequate model, based on the Akaike information criterion (AIC). Species were considered to promote ecosystem functioning in a context if they were included in the minimally adequate model and had effects in the direction that would usually be considered desirable from an ecosystem services perspective17.
+
++ [@Maestre:2012fw]
+
+> The multifunctionality index M for each plot was the average Z-score for all functions measured within the plot.
+
++ [@Pasari:wd]
+
+> mean of all functions minus its standard deviation 
+
+> multifunctionality measured as the number of functions that exceeded discrete functional thresholds (T)
+
++ [@Byrnes:2014fv]
+
+> we recommend standardizing by a chosen maximum value
+
+> This involves plotting the effect of diversity on multifunctionality (MFt) across the full range of thresholds between 0% and 100%. We take this approach in order to examine the change of the shape of the fitted curve at different thresholds, rather than evaluating the statistical evidence for any single curve.
+
++ [@Dooley:2015em]
+
+>  Here, we develop the Multivariate Diversity-Interactions model to analyse the mul- tifunctional BEF relationship by extending the univariate Diversity-Interactions approach to a multivariate framework.
+
+> comparisons of the model components across ecosystem functions allow testing of the relative perfor- mance of functions across diversity characteristics, such as species identities, species interactions, evenness, richness and manipulated treatments or environmental variables
+
++ [@Slade:2017be]
+
+> We apply the newly developed multivariate diversity–interactions framework (Dooley et al. 2015) for ecosystem multifunctionality to this model system. 
+In combination, we develop a novel desirability function approach to measure the contribution of individual species and interactions among species, to a desired state of overall ecosystem functioning.
+
++ [@Meyer:2017gj]
+
+> To calculate a multifunctionality index, we extended the averaging approach that sums up individual ecosystem functions19,32 to a multivariate measure. We did so by calculating a PCA for the multifunctional space spanned by the ecosystem variables indicating functions and summing the PCA axis scores for each experimental plot. In this PCA-based approach, correlated functions do not contribute multiple times to the index of multifunctionality as they would in the averaging approach because all PCA axes are, by definition, orthogonal to each other. 
+
+
+
+
+
+
+
+
+
