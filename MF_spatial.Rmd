@@ -1,0 +1,105 @@
+---
+title: "MF spatial"
+output: html_notebook
+---
+
+```{r, message=FALSE}
+library(raster)
+library(ggplot2)
+library(dplyr)
+library(tidyr)
+library(vegan)
+```
+
+
+
+```{r}
+
+nplots <- 16
+nfuncs <- 16
+
+func.names <- paste("Func", formatC(1:nfuncs, width = 2, flag = 0))
+
+Function_df <- 
+tibble(functions = rep(func.names, nplots),
+       #value = rbeta(nplots * nfuncs, 0.1, 6),
+       value =unlist(lapply(1:16, function(x) {z <- rep(0,16); z[x] <- 1; z})),
+       plot = paste("plot", rep(formatC(1:nplots, width = 2, flag = 0), each = nfuncs)))
+
+
+# spread
+Function_df <- 
+Function_df %>% 
+  spread(functions, value)
+
+#standardize by regional sum
+Function_df <- 
+Function_df %>% 
+  mutate_if(is.numeric, function(x) x / max(x))
+
+
+Function_df %>% 
+  gather(Func, Value, -plot) %>% 
+  ggplot(aes(x = Func, y = Value))+
+  geom_bar(stat = "identity")+
+  facet_wrap(~plot)
+
+# calculate alpha MF
+alpha_MF <- 
+  Function_df %>% 
+  mutate(group = rep(1:8, each = 2)) %>% 
+  group_by(group) %>% 
+  summarize_at(func.names, sum) %>% 
+  mutate(effN_F = renyi(.[,func.names], scale = 1, hill = TRUE)) %>% 
+  mutate(av_F = rowMeans(.[,func.names])) %>% 
+  mutate(alphaMF = effN_F*av_F)
+
+gamma_MF <- 
+  Function_df %>% 
+  mutate(group = 1) %>% 
+  group_by(group) %>% 
+  summarize_at(func.names, sum) %>% 
+  mutate(effN_F = renyi(.[,func.names], scale = 1, hill = TRUE)) %>% 
+  mutate(av_F = rowMeans(.[,func.names])) %>% 
+  mutate(gammaMF = effN_F*av_F)
+
+
+gamma_MF$effN_F / mean(alpha_MF$effN_F)
+Beta_MF <- gamma_MF$gammaMF / mean(alpha_MF$alphaMF)
+
+```
+
+Function that takes matrix and returns list with alpha beta and gamma MF
+
++ input data can be a dataframe with plot names in first column or a numeric matrix with plotnames as rownames
+```{r}
+
+
+mf_part <- function(data, scale, func.names){
+  
+  alpha_MF <- 
+  data %>% 
+  mutate(effN_F = renyi(.[,func.names], scale = scale, hill = TRUE)) %>% 
+  mutate(av_F = rowMeans(.[,func.names])) %>% 
+  mutate(alphaMF = effN_F*av_F)
+  
+  gamma_MF <- 
+  data %>% 
+  mutate(group = 1) %>% 
+  group_by(group) %>% 
+  summarize_at(func.names, mean) %>% 
+  mutate(effN_F = renyi(.[,func.names], scale = 1, hill = TRUE)) %>% 
+  mutate(av_F = rowMeans(.[,func.names])) %>% 
+  mutate(gammaMF = effN_F*av_F)
+  
+  beta_MF <- gamma_MF / mean(alpha_MF$alphaMF)
+  
+  Result <- list(alpha = alpha_MF, gamma = gamma_MF, beta = beta_MF)
+
+  return(Result)
+}
+
+
+
+```
+
