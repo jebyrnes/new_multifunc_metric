@@ -163,20 +163,36 @@ AvFunc <- AverageFunction(SpecMat, FuncMat,
 
 ### Standardize function values
 
-There are two main ways to standardize the function values:
+There are a couple of ways hof the values can be standardized. They are implemented in the `multifunc::getStdAndMeanFunctions` function. 
 
-+ between 0 and 1 with $x_{stand} = \frac{x - min(x)}{max(x) - min(x)}$ *this standardization stretches the function values artifically between 0 and 1 and is likely to skew the evenness. We should discourage it as Lars and I did previously*
++ by the maximum with $x_{stand} = \frac{x}{max(x)}$ --> implemented in `standardizeUnitScale`
 
-+ by the maximum with $x_{stand} = \frac{x}{max(x)}$
++ between 0 and 1 with $x_{stand} = \frac{x - min(x)}{max(x) - min(x)}$ --> not implemented in the `multifunc package`
+*this standardization stretches the function values artifically between 0 and 1 and is likely to skew the evenness. We should discourage it as Lars and I did previously*
 
-*we should briefly discuss z-cores as they are common (i.e. in that they don't work becaucse of frequencies (writing it down to think about it) and also standardization around 0 takes away the meaning of 0 = no functioning)*
++ z-score $x_{stand} = \frac{x - mean(x)}{sd(x)}$ (centering the variables to 0 and dividing by the standard deviation) --> implemented in `standardizeZScore`
+*z-cores are common but they get weird (i.e. in that they don't work becaucse of frequencies (writing it down to think about it) and also standardization around 0 takes away the meaning of 0 = no functioning)*
+
++ Hedges standardization $x_{stand} = \frac{x - min(x)}{sd(x)}$ (shifting minimum to 0 and scaling by the standard deviation) (`standardizeHedges`) --> new suggestion by Jarrett (see [#5](https://github.com/jebyrnes/new_multifunc_metric/issues/5#issuecomment-398510252))
+*I don't think we shoudl take any standardization that divides by the standard deviation. This allready punishes for uneveness...*
+
+
++ Log-ratio standardization $x_{stand} = log(x + c) - log( min(x) + c)$ (`standardizeLR`) -- new suggestion by Jarrett (see [#5](https://github.com/jebyrnes/new_multifunc_metric/issues/5#issuecomment-398510252))
+
+
 
 ```{r, "standardize"}
 # extract function names
 func.names <- as.character( unique( FuncMat$Functions))
 
-# standardize by maximum
- AvFunc[,func.names] <- apply(AvFunc[,func.names], 2, function(x) {x/max(x)})
+#choose standardization function
+standfunc <- standardizeUnitScale # by max
+#standfunc <- standardizeZScore    # Z-score
+#standfunc <- standardizeHedges    # Hedges
+#standfunc <- standardizeLR        # Log-ratio
+
+# standardize 
+AvFunc[,func.names] <- apply(AvFunc[,func.names], 2, standfunc)
 
 # alternative standardize between 0 and 1
 # AvFunc[,func.names] <- apply(AvFunc[,func.names], 2, function(x) {(x - min(x)) / (max(x) - min(x))})
@@ -246,7 +262,9 @@ AvFunc[["Functional Evenness"]] <- AvFunc %>% funcEven(func.names, q = 1)
 
 #Now our multifunctionality metric - I could have
 #done this as a product, but I'm guessing people will want a function
-AvFunc$Multifunctionality <- AvFunc %>% getMF(func.names)
+
+#this function standardizes the functions again. it shouldn't do that. Here I provide a unity function to avoid double standardization
+AvFunc$Multifunctionality <- AvFunc %>% getMF(func.names, standardizeFunction = function(x) (x))
 
 Multifunc_new <- 
   AvFunc %>%
@@ -301,54 +319,16 @@ correlation between average MF and MF_new
 
 ```{r}
 ggplot(AvFunc, aes(x = meanFunction, y = Multifunctionality))+
-  geom_point(alpha = 0.2)+
-  geom_smooth()+
+  geom_point(alpha = 0.2, size = 0.1)+
+  stat_density2d(aes(fill = ..level..), geom = "polygon", alpha = 0.3)+
+  geom_smooth(method = "lm", se = F, size = 0.4, colour = "darkred")+
   geom_abline(intercept = c(0,0), slope = 1)+
-  coord_fixed()
+  scale_fill_viridis_c()+
+  #coord_fixed()+
+  expand_limits(x = 0.15, y = 0.15)
+  NULL
   
 ```
 
 
-
-
-Dependence of the evenness factor on the function distribution
-
-```{r}
-exp_decay <- function(x, lambda){
-  y = exp(1)^(-lambda * x)
-  DF <- tibble(x = x,
-               y = y)
-  return(DF)
-}
-
-lambda <- seq(0,5,0.1)
-
-for (i in seq_along(lambda)){
-  if(i == 1){
-    DF <- exp_decay(seq(0,10,0.2), lambda[i])
-    DF$lambda <- lambda[i]
-  }
-  if(i > 1){
-    DF_t = exp_decay(seq(0,10,0.2), lambda[i])
-    DF_t$lambda <- lambda[i]
-    DF <- bind_rows(DF, DF_t)
-  }
-}
-
-
-ggplot(DF, aes(x = x, y = y, colour = lambda, group = as.factor(lambda)))+
-  geom_line()+
-  scale_colour_viridis_c()
-
-DF %>% 
-  spread(x, y) %>% 
-  funcEven(as.character(DF$lambda), q = 1) %>% 
-  tibble(funcEven = .,
-         lambda = lambda) %>% 
-  ggplot(aes(x = lambda, y = funcEven, colour = lambda))+
-  geom_line()+
-  geom_point()+
-  scale_colour_viridis_c()
-  
-```
 
