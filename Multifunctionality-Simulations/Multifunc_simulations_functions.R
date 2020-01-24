@@ -490,6 +490,36 @@ getCoefTab<-function(eqn, fun=glm, data, groupVar="thresholds", coefVar, ...){
 ############################################
 
 
+# Copies of the multifunc package functions for function standardizations: 
+
+#standardizeUnitScale
+###############
+standardizeUnitScale <- function (afun, min0 = T, maxValue = max(afun, na.rm = T)) 
+{
+  if (min0 && min(afun, na.rm = T) < 0) 
+    afun <- afun + abs(min(afun, na.rm = T))
+  afun/maxValue
+}
+
+#standardizeZScore
+###############
+standardizeZScore <- function (afun) 
+(afun - mean(afun, na.rm = F))/sd(afun, na.rm = T)
+
+# Two additional standardization methods
+
+#standardizeHedges
+###############
+standardizeHedges <- function (afun, minFun = min(afun, na.rm=T)) 
+(afun - minFun)/sd(afun, na.rm = T)
+
+
+#standardizeLR
+###############
+standardizeLR <- function (afun, minFun = min(afun, na.rm=T), offset=1)
+log(afun + offset) - log(minFun + offset)
+
+
 
 ########### function taken form the MASS package ###################
 
