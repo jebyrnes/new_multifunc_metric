@@ -1,0 +1,52 @@
+---
+title: "Dependence of the evenness factor on the function distribution"
+output: html_notebook
+---
+
+```{r}
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+```
+
+
+```{r}
+exp_decay <- function(x, lambda){
+  y = exp(1)^(-lambda * x)
+  DF <- tibble(x = x,
+               y = y)
+  return(DF)
+}
+
+lambda <- seq(0,5,0.1)
+
+for (i in seq_along(lambda)){
+  if(i == 1){
+    DF <- exp_decay(seq(0,10,0.2), lambda[i])
+    DF$lambda <- lambda[i]
+  }
+  if(i > 1){
+    DF_t = exp_decay(seq(0,10,0.2), lambda[i])
+    DF_t$lambda <- lambda[i]
+    DF <- bind_rows(DF, DF_t)
+  }
+}
+
+DF %>% 
+  ggplot(aes(x = x, y = y, colour = lambda, group = as.factor(lambda)))+
+  geom_line()+
+  scale_colour_viridis_c()
+
+DF %>% 
+  spread(x, y) %>% 
+  funcEven(as.character(DF$lambda), q = 1) %>% 
+  tibble(funcEven = .,
+         lambda = lambda) %>% 
+  ggplot(aes(x = lambda, y = funcEven, colour = lambda))+
+  geom_line()+
+  geom_point()+
+  scale_colour_viridis_c()
+  
+```
+
+
