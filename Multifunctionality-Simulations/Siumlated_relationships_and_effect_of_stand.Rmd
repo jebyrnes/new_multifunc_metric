@@ -1,0 +1,178 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This is script sets up simulations to explore the sensitivity to the MF metric to function distribution, standardization 
+
+```{r}
+library(tidyr)
+library(dplyr)
+library(ggplot2)
+library(gridExtra)
+library(GGally)
+```
+
+Here I draw a bunch of function values from a range of distributions chosen to cover the range from uniform to strongly skewed so that the function values covers a wide range of evenness values. 
+
+```{r, "funcmat"}
+# set seed to replicate analysis:
+set.seed(999)
+
+# number of functions
+funcnum <- 15
+
+# draw `funcnum` function values from a range of different distributions 
+func_lnorm <- 
+  sapply(rep(seq(0.01,1,0.01), each = 10), function(x) rlnorm(funcnum, 0, x)) %>% 
+  as.matrix 
+  
+func_beta <- 
+  sapply(rep(seq(0.01,1,0.01), each = 10), function(x) rbeta(funcnum, 1, x)) %>% 
+  as.matrix 
+
+func_gamma <- 
+  sapply(rep(seq(0.01,4,0.01), each = 100), function(x) rgamma(funcnum, x)) %>% 
+  as.matrix 
+
+funcmat <- cbind(func_lnorm, func_beta, func_gamma)
+
+```
+
+
+I standardize all values by their plot maximum after shifting all values to positive in case we unexpectedly drew a negative number. 
+I the calculate the *Average*, *evenness factor*, the *effective number of functions* and the *scaled and unscaled multifunctionality*. 
+
+!! Here I standardize each set of funcnum values, normaly one would standardize across set of plots and not each plot would have a maximum of 1. !!
+
+```{r}
+#standardize function values
+funcmat_st <- apply(funcmat, 2, function(x) {x + min(x)})
+funcmat_st <- apply(funcmat, 2, function(x) {x / max(x)})
+
+# calculate MF metrics for each draw of function values
+MF_comp <- tibble(
+  Average = apply(funcmat_st, 2, mean),
+  effN = apply(funcmat_st, 2, vegan::renyi, scales = 1, hill = T)) %>% 
+  mutate(even_fac = effN / funcnum) %>% 
+  mutate(MF_scaled = even_fac * Average) %>% 
+  mutate(MF_effN = effN * Average)
+
+MF_comp %>% 
+  ggplot(aes(x = even_fac))+
+  geom_histogram()
+
+```
+
+
+I plot the pairwise comparisions of interest. Note that I make the plots with MF_scaled but I could as well make them with MF_effN. The number of functions doesn't change so MFeffN = MFscaled * funcnum and is linearly related. 
+```{r}
+p_Av_MFsclaed <- 
+ggplot(MF_comp, aes(Average, MF_scaled, colour = even_fac))+
+  geom_point(size = 0.5)+
+  scale_colour_viridis_c()+
+  geom_abline(intercept = c(0,0), slope = 1)+
+  coord_fixed()
+  
+p_evF_MFsclaed <-
+ggplot(MF_comp, aes(even_fac, MF_scaled, colour = Average))+
+  geom_point(size = 0.5)+
+  scale_colour_viridis_c()+
+  geom_abline(intercept = c(0,0), slope = 1)+
+  coord_fixed()
+
+p_Av_evF <-
+ggplot(MF_comp, aes(Average, even_fac, colour = MF_scaled))+
+  geom_point(size = 0.5)+
+  scale_colour_viridis_c()+
+  geom_abline(intercept = c(0,0), slope = 1)+
+  coord_fixed()
+  
+```
+
+arrange and plot plots
+```{r}
+grid.arrange(p_Av_MFsclaed, p_evF_MFsclaed, p_Av_evF, nrow = 2)
+```
+
+# effect of standardizations
+
+```{r}
+
+Funcs <- 
+t(funcmat) %>% 
+  as.data.frame()
+```
+
+```{r, "standardize"}
+# extract function names
+func.names <- paste("V", 1:funcnum, sep = "")
+
+#choose standardization function
+standfunc <- standardizeUnitScale # by max
+#standfunc <- standardizeZScore    # Z-score
+#standfunc <- standardizeHedges    # Hedges
+#standfunc <- standardizeLR        # Log-ratio
+
+# standardize by max
+Funcs_max <- apply(Funcs[,func.names], 1, standardizeUnitScale) %>% t()
+
+# Z-score
+Funcs_Z <- apply(Funcs[,func.names], 1, standardizeZScore) %>% t()
+
+# Hedges
+Funcs_H <- apply(Funcs[,func.names], 1, standardizeHedges) %>% t()
+
+# Log-ratio
+Funcs_LR <- apply(Funcs[,func.names], 1, standardizeLR) %>% t()
+
+# alternative standardize between 0 and 1
+Funcs_01 <- apply(Funcs[,func.names], 1, function(x) {(x - min(x)) / (max(x) - min(x))}) %>% t()
+
+Func_df_list <- list(Funcs = Funcs,
+                     Funcs_max = Funcs_max,
+                     #Funcs_Z = Funcs_Z,
+                     Funcs_H = Funcs_H,
+                     Funcs_LR = Funcs_LR,
+                     Funcs_01 = Funcs_01
+                     )
+
+effN_list <- 
+lapply(Func_df_list, function(x) {
+  apply(x, 1, vegan::renyi, scales = 1, hill = 1)
+}) 
+
+effN_df <- 
+do.call(cbind, effN_list) %>% 
+  as.data.frame() 
+
+```
+
+```{r}
+p_max <- 
+ggplot(effN_df, aes( x = Funcs, y = Funcs_max))+
+  geom_point()+
+  geom_abline(intercept = c(0,0), slope = 1, col = "red")+
+  coord_fixed()
+
+p_H <- 
+  ggplot(effN_df, aes( x = Funcs, y = Funcs_H))+
+  geom_point()+
+  geom_abline(intercept = c(0,0), slope = 1, col = "red")+
+  coord_fixed()
+
+p_LR <- 
+  ggplot(effN_df, aes( x = Funcs, y = Funcs_LR))+
+  geom_point()+
+  geom_abline(intercept = c(0,0), slope = 1, col = "red")+
+  coord_fixed()
+
+p_01 <- 
+  ggplot(effN_df, aes( x = Funcs, y = Funcs_01))+
+  geom_point()+
+  geom_abline(intercept = c(0,0), slope = 1, col = "red")+
+  coord_fixed()
+
+grid.arrange(p_max, p_H, p_LR, p_01)
+```
+
