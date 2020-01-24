@@ -1,0 +1,145 @@
+---
+title: "R Notebook"
+output: html_notebook
+---
+
+This script is to test the relationship between euclidian distance and correlations
+
+```{r}
+library(Matrix)
+library(corrplot)
+library(hillR)
+library(tidyr)
+library(dplyr)
+
+# number of functions
+funcnum <- 10
+
+min = seq(-1,1,0.1)
+max = seq(-1,1,0.1)
+
+limit_df <- 
+expand_grid(min,max) %>% 
+  filter(min < max)
+
+Func_cor_list <- 
+limit_df %>% 
+  mutate(split = 1:n()) %>% 
+  split(., .$split) %>% 
+  lapply(., function(x) { 
+  
+  # make correlation matrix 
+cormat <- funcnum*(funcnum-1)/2
+cormat <- runif(cormat, min=x$min, max=x$max)
+M <- matrix(ncol = 10, nrow = 10)
+M[upper.tri(M,diag=F)] <- cormat
+M[lower.tri(M,diag=F)] <- t(M)[lower.tri(M, diag=F)]
+diag(M) <- 1
+
+ #make covariance matrix
+sd <- rnorm(10, 5 , 2)
+M <- M* (sd %*% t(sd))
+
+#find closest positive definite covarinace matrix
+M <- nearPD(M)$mat
+
+#draw function values for 100 plots and 10 functions with the specified covariance structure
+Func <- MASS::mvrnorm(100, rep(0.5,10), Sigma = M)
+
+#shift to positive
+Func <- Func + abs(min(Func))
+
+#standardise by max
+Func <- apply(Func, 2, function(x) x/max(x))
+
+})
+
+
+```
+
+```{r}
+
+MF_effN <- 
+lapply(Func_cor_list, function(x){
+  apply(x, 1, vegan::renyi, scales = 1, hill = T) * rowMeans(x)
+})
+
+# MF_effN_cor <- 
+# lapply(Func_cor_list, function(x){
+#   apply(x, 1, hillR::hill_func, scales = 1, hill = T) * rowMeans(x)
+# })
+
+# function from http://140.114.36.3/wordpress/paper/functional%20diversity.r (Anne Chaos website)
+# Results don't make sense. 
+
+FD_MLE = function(q, data ,Dij){
+  Xi <- data[data!=0]
+  distance <- Dij[data!=0, data!=0]
+  a <- Xi/sum(Xi)
+  
+  Q = sum(distance*(a %*% t(a)))
+  
+  Emp <- function(q){
+    if(q==1){
+      Empirical = exp(-sum(empirical_q1(a, as.matrix(distance), Q)))
+    }else{
+      Empirical = sum(empirical(a, as.matrix(distance), q, Q))^(1/(1-q))
+    }
+    Empirical
+  }
+  sapply(q, Emp)
+}
+
+cppFunction(
+  "NumericMatrix empirical(NumericVector ai,NumericMatrix dij,float q,float Q){
+  const int S = ai.size();
+  NumericMatrix temp(S,S);
+  for(int i=0;i<S;i++){
+  for(int j = 0;j<S;j++){
+  temp(i,j) = dij(i,j)*pow((ai[i]*ai[j]/Q),q);
+  }
+  }
+  return(temp);
+  }")
+
+cppFunction(
+  "NumericMatrix empirical_q1(NumericVector ai,NumericMatrix dij,float Q){
+  const int S = ai.size();
+  NumericMatrix temp(S,S);
+  for(int i=0;i<S;i++){
+  for(int j = 0;j<S;j++){
+  temp(i,j) = dij(i,j)*(ai[i]*ai[j]/Q)*log(ai[i]*ai[j]/Q);
+  }
+  }
+  return(temp);
+  }")
+
+dM <- as.matrix(vegan::vegdist(test_trait))
+dM[dM > 0] <- 1
+
+dM <- matrix(rep(1,100), nrow = 10)
+diag(dM) <- 1
+
+FD_MLE(3, c(1:10)/sum(1:10), dM)
+
+vegan::renyi(c(1:10)/sum(1:10), scales = 2, hill = T)
+length(test[1,])
+
+test <- 
+  Func_cor_list$`1` %>% 
+  as.data.frame()
+
+colnames(test) <- paste("F_", 1:ncol(test), sep = "")
+
+test_trait <- t(test) %>% as.data.frame() 
+test_trait <- vegan::vegdist(test_trait)
+
+test_trait$V11 <- letters[1:nrow(test_trait)]
+
+
+hillR::hill_func(test, test_trait, traits_as_is = TRUE, checkdata = FALSE, q = 0, fdis = FALSE)
+
+library(Rcpp)
+```
+
+
