@@ -138,8 +138,8 @@ FuncMat_plot %>% cor %>%
 ```{r, "Avfunc"}
 # code takes ~5 min to run for 15 species. Set to lower value for higher number of species! 
 
-maxrep <- choose(specnum, floor(specnum/2))
-#maxrep <- 500
+#maxrep <- choose(specnum, floor(specnum/2))
+maxrep <- 500
 
 # simulate plot x species matrix
 SpecMat <- SpeciesMatrix(specnum = specnum, maxrep = maxrep)
