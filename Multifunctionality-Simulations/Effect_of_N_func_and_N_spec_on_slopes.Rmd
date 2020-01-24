@@ -1,0 +1,204 @@
+---
+title: "Effect of varying number of functions and species on the slope of the averaging approach and the new multifunctionality metric"
+output:
+  html_document: default
+---
+
+This script sets up the simulations to show the effect of including a varying number of functions and (separately) a varying number of species on the slope pattern produced by the new multifunctionlaity metric and the averaging approach. 
+
+For the **variable number of function simulation** we hold species richness constant at `specnum`. 
+
+We then define a set number of functions of size `funcnum` from which we draw all possible (but max 50) subsets of variable size (3 subsets-sizes total). For each subset of functions we calculate the multithreshold approach. 
+
+For the **variable number of species simulation** we hold the number of functions constant at `funcnum` but calculate the multithreshold approach for the full species range and two smaller subsets.  
+
+
+```{r, echo = FALSE, warning=FALSE, message=FALSE, "load packages"}
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(cowplot)
+
+source("Multifunc_simulations_functions.R")
+```
+
+# Effect on new multifunctionality metric
+
+## Variable number of function simulation
+
+### Simulate full diversity experiment
+
+One can set the same parameters as in most other simulations:
+
++ `distribution` : the distribution function. The names of the parameters must be changed accordingly in `FunctionValue()`
++ `specnum` : the (maximum) number of species
++ `funcnum` : the (maximum) number of functions 
++ `method` : the method to use (with or without complementarity)
+
+Additional parameters for `method = comp`:
+
++ `CF` : maximum complementarity factor 
++ `compfunc` : which functions should experience complementarity (`all` or any combination of `func.names`)
++ `r` : the *growthrate* of the complementarity factor
+
+
+# Effect on averaging approach
+
+This script sets up the simulations to show the effect of including a different number of functions (from a set of `funcnum` functions) on the slope of the $average multifunctionality \sim diveristy$ relationship. We simulate all scenarios with 0 : `funcnum` functions subjected to complementary.
+
+From the predefined set of functions we draw all possible sub-sets of function combinations of size 1 : `funcnum`. For each subset we calculate the $average multifunctionailty \sim diversity$ slope. 
+
+**Choosing the pre-set values produces Figure 2a** which shows the relationship of the slope with number of functions. Figure 2 includes scenarios with 0 , 3, 6 and 9 (all) functions subjected to complementary. 
+
+You can set the same parameters as in most other simulations:
+
++ `distribution` : the distribution function. The names of the parameters must be changed accordingly in `FunctionValue()`
++ `specnum` : the number of species
++ `funcnum` : the number of functions 
+
+`method` is chosen automatically during the simulation
+
+Additional parameters for `method = comp`:
+
++ `CF` : maximum complementary factor 
++ `r` : the 'growth-rate' of the complementary factor
+
+`compfunc` is set automatically during the simulation
+
+```{r, "function values"}
+specnum <- 12
+funcnum <- 9
+
+distribution = "runif"
+
+#maxrep <- choose(specnum, floor(specnum/2))
+maxrep <- 200
+
+FuncMat <- FunctionValue(specnum,funcnum, distribution, min = 0, max = 1)
+
+func.names <- as.character( unique( FuncMat$Functions))
+
+SpecMat <- SpeciesMatrix(specnum = specnum, maxrep = maxrep)
+
+CF = 3
+r = 0.25
+```
+
+### simulation of all possible slopes for 1:`funcnum` functions
+
+```{r, "simulation"}
+
+# empty dataframe to store results
+Slope_res <- data.frame(Estimate = numeric(),
+                        `Std. Error` = numeric(),
+                        `t value` = numeric(),    
+                        `Pr(>|t|)` = numeric(),
+                        nfunc = numeric(),
+                        ncomp = numeric(),
+                        metric = character())
+
+# loop over all possible number of functions with complementarity
+for (l in floor(seq(0, funcnum, length.out = 3))) {
+  
+set.seed(999)
+
+# choose method = average if no functions with complementarity and method = comp otherwise
+  if(l == 0) {
+    method = "av"
+  }  else {
+    method = "comp"
+    compfunc = func.names[1:l]
+  }
+
+# draw function values and calculate mean function for all richness levels
+AvFunc <- AverageFunction(SpecMat, FuncMat,
+                          method = method, 
+                          CF = CF, 
+                          compfunc = compfunc,
+                          r = r)
+
+# standardize functions
+AvFunc <- AvFunc %>% 
+  select(Richness, one_of(func.names)) %>% 
+  mutate_at(vars(one_of(func.names)), function(x) {x / max(x)})
+  #mutate_at(vars(one_of(func.names)), function(x) {(x - min(x)) / (max(x) - min(x))})
+
+
+# loop over all subsets of function of size 1:funcnum
+for (i in 2: funcnum) { 
+
+  # all poosibel combination of i out of funcnum functions
+  func_comb <- combn(func.names, i)
+  
+  # sample 50 random function combinations if more than 50 possible combinations
+  if(ncol(func_comb) > 50) {
+    func_comb <- func_comb[, sample(c(1:ncol(func_comb)), 50)]
+  }
+  
+  # loop over all function combinations of size i
+  for ( k  in seq_len(ncol(func_comb))) { 
+  
+    # calculate mean function
+    AvFunc_temp <- AvFunc %>%
+      select(Richness, one_of(func_comb[ ,k])) %>% 
+      mutate(Multifunctionality = getMF(.[func_comb[ ,k]], func.names, standardizeFunction = function(x) (x))) %>% 
+      mutate(effectiveFunctions = multifunc::eff_div(.[func_comb[ ,k]], q = 1)) %>% 
+      mutate(meanFunction = rowMeans(.[func_comb[ ,k]])) %>% 
+      mutate(newMF_effN = effectiveFunctions * meanFunction)
+  
+    # fit linear model with stand. metric
+    mod_MFst <- lm(Multifunctionality ~ Richness, data = AvFunc_temp)
+    
+     # fit linear model effective number of functions metric
+    mod_MF <- lm(newMF_effN ~ Richness, data = AvFunc_temp)
+  
+    # get slope estimate for scaled metric
+    est_MFst <- summary(mod_MFst)$coefficients[2,]
+    
+    # get slope estimate for unscaled metric
+    est_MF <- summary(mod_MF)$coefficients[2,]
+    
+    # store results
+    Slope_res <- data.frame(t( est_MFst)) %>% 
+      rbind( data.frame( t( est_MF))) %>% 
+      mutate(metric = c("stand_MF", "effN_MF")) %>% 
+      mutate(., nfunc = i) %>% 
+      mutate(ncomp = l) %>% 
+      rbind(Slope_res, .)
+  }
+}
+}
+
+AvFunc_temp %>% 
+  ggplot(aes(x = Richness, y = newMF_effN))+
+  geom_point()+
+  stat_smooth(method = "lm", se = F)
+
+
+```
+
+### Plot 
+```{r, warnings = F, "plot figure", fig.height= 4, fig.width= 4}
+plot_av <- Slope_res %>% 
+ # filter(metric == "effN_MF") %>% #MF as effective number of functions
+  filter(metric == "stand_MF") %>% #MF scaled to 1
+  ggplot(aes(x = nfunc, y = Estimate, colour = as.factor(ncomp)))+
+  geom_point(position = position_jitterdodge(jitter.width = 0.2, jitter.height = 0, dodge.width = 0.75),
+             alpha = 0.5, shape = 21)+
+  geom_smooth(method = "lm", se = F, size = 0.5, 
+              position = position_dodge(width = 0.5))+
+  scale_color_brewer(guide = guide_legend(title = "Number of functions\nwith complementarity",
+                                          nrow=2,byrow=TRUE),
+                     palette = "Set1")+
+  scale_x_continuous(breaks = seq(1,funcnum,1))+
+  #scale_y_continuous(limits = c(NA, 0.038))+
+  labs(y = "Slope estimate",
+       x = "Number of functions considered")+
+  theme_classic()+
+  theme(legend.position = "bottom")
+  
+ plot_av 
+
+```
+

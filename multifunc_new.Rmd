@@ -27,11 +27,50 @@ library(kableExtra)
 source("Functions.R")
 ```
 
-#### Introduction
+#### Abstract
 
-The past decade has witnessed the growth of the concept of ecosystem **multifunctionality**. Multifunctionality is defined as a measure of the simultaneous performance of multiple functions. Note that we do not say "ecosystem functions", as multifunctionality is a broader concept that can be easily applied outside of community and ecosystem ecology - and even outside of ecology altogether. This concept has proven unifying in a number of different situations. In the Biodiversity Ecosystem Function literature, it has enabled researchers to realize that, while specific species often drive single functions, different species or functional groups often drive different functions enhancing diversity's importance as progressively more functions are considered [@Hooper:1998un; @Duffy:2003wt;  @Hector:2007gm; @Lefcheck:2015dg]. Researchers are beginning to recognize that foundation species create multifunctional landscapes [@Angelini:2015ef] that differ not only in species diversity and abundance, but ecosystem-level properties. Invasion biology has begun to use multifunctionality to quantify whole-system level changes [@Ramus:2017gn]. Multifunctionality has tremendous use to applied ecology as well. Managers often attempt to work towards the provision of multiple ecosystem services [@Nelson:2009kl, @Brandt:2014; @Binder:2018is] - fundamentally the same concept as multifunctionality - or have come to understand single ecosystem services as the sum of multiple different ecosystem functions [@Nilsson:2017gv]. Across each of these areas, we see that the concept of multifunctionality as a potential linchpin linking community and ecosystem ecology. 
+In ecology, multifunctionality measures the simultanious provision of multiple ecosystem functions. If species diveristy describes the variety of species that together build the ecosystem, multifunctionality attempts to describe the variety of functions these species perform. A range of methods have been proposed to quantify multifunctionlity, successevely attempting to alleviate problems that have been identified with the previous method. This has led to a proliferation of more-or-less closely related metrics which, however, lack an overarching theoretical framework. Here we borrow from the comprehensive framwork of species diversity measured as effective numbers to derive a new metric of multifunctionality measured as the diversity of functions. As the effective number of species, the metric is influenced both by the number of functions as well as crucially the eveness of performance levels across functions. In addtion the effective number of functions also considers the average level at which the functions are performed. The framework allows for the inclusion of the correlation structure among functions, thus allowing to account for non-independence between functions. We show that the average metric is a special case of the newly proposed metric and argue that the threshold-based metrics should be abondoned because of fatal flaws. We hope that by providing a new metric of multifunctionality anchored in the sound and rigurous framework of species diveristy based on effective numbers, we will overcome the considerable scepticism that the larger community of ecologists has built against indicies of multifunctionality. We thereby hope to help popularize this important concept which, as biological diveristy, describes a fundamental property of ecosystems and thus lies at the heart of ecology.
 
-However, adoption of multifunctionality as a fundamental concept providing this linchpin has been slow. Nor is there a robust theoretical core behind multifunctionality, further hindering its penetration into scientific thinking. We posit that there is at least one simple explanation behind this lack of progress. While some researchers and managers have latched on to the concept of multifunctionality, the field still lacks a clear single metric that it can use to summarize the phenomenon. Frankly, current metrics range from the simple yet misstated to the complex and accurate yet unweildy. We acknowledge some of our own blame in this state of affairs [@Byrnes:2014fv]; although we do note that throwing even some of the finest minds against this problem in a stimulating working group format over multiple years (we are thankful for NCEAS for providing this venue) has likely resulted in more ink impregnated on foreheads hitting whiteboards than should be typical. We are similarly thankful that many in the field have continued to be critical and force us to look at our current failures with honesty [@Roger:2016bt].
+
+#### Introduction Fabian
+
+The past decade has witnessed the growth of the concept of ecosystem **multifunctionality**. Multifunctionality is defined as a measure of the simultaneous performance of multiple functions. Note that we do not say "ecosystem functions", as multifunctionality is a broader concept that can be easily applied outside of community and ecosystem ecology - and even outside of ecology altogether. However, despite the popularity that the concept gained since it was first explicitley proposed over a decade ago (@Hector:2007gm, @Gamfeldt:2008tqa), there is still no consesus on how multifunctionality should be quantified. A range of methods have been proposed where each subsequent method attempted to alleviate problems the authors had identified with the previous method, leading to a proliferation of metrics which cannot easily be compared and can lead to inconsistent interpretations of the results [@Byrnes:2014fv].This plurality of concepts has hampered a general understanding of multifunctionality and possibly its adoptance outside of the field of biodiveristy and ecosystem functioning.
+
+Species diversity for a long time, suffered the same problems that multifunctionality suffers today: There are a sheer uncountable number of metrics to estimate alpha diversity, reaching from the simple count of observed species without regard to their abundance (Richness), wide array of metrics incorporating the relative abundance (Shannon entropy, Simpson index or Raouls quadratic Entropy or Berger-Parker Dominance index to name some of the most commen ones), to metrics based on the historgramms of the abundace distribution (e.g. fishers alpha) [REF Magurran and Mcgill book]. Yet, starting with Mc arthur in 1952, then Hill in 1972 and finlay Lou jost in 2006 a common framework for species diversity has been develloped which encompassed the vast majority of previous metrics. The effective number of species. 
+
+
+
+_...to the diversity of functions_
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+#### Introduction Jarrett
+
+The past decade has witnessed the growth of the concept of ecosystem **multifunctionality**. Multifunctionality is defined as a measure of the simultaneous performance of multiple functions. Note that we do not say "ecosystem functions", as multifunctionality is a broader concept that can be easily applied outside of community and ecosystem ecology - and even outside of ecology altogether. This concept has proven unifying in a number of different situations. <!-- In the Biodiversity Ecosystem Function literature, it has enabled researchers to realize that, while specific species often drive single functions, different species or functional groups often drive different functions enhancing diversity's importance as progressively more functions are considered [@Hooper:1998un; @Duffy:2003wt;  @Hector:2007gm; @Lefcheck:2015dg]. --> <!-- I cannot subscribe to that given our NEE paper :-)--> Researchers are beginning to recognize that foundation species create multifunctional landscapes [@Angelini:2015ef] that differ not only in species diversity and abundance, but ecosystem-level properties. Invasion biology has begun to use multifunctionality to quantify whole-system level changes [@Ramus:2017gn]. Multifunctionality has tremendous use to applied ecology as well. Managers often attempt to work towards the provision of multiple ecosystem services [@Nelson:2009kl, @Brandt:2014; @Binder:2018is] - fundamentally the same concept as multifunctionality - or have come to understand single ecosystem services as the sum of multiple different ecosystem functions [@Nilsson:2017gv]. Across each of these areas, we see that the concept of multifunctionality as a potential linchpin linking community and ecosystem ecology. 
+
+However, adoption of multifunctionality as a fundamental concept providing this linchpin has been slow. Nor is there a robust theoretical core behind multifunctionality, further hindering its penetration into scientific thinking. We posit that there is at least one simple explanation behind this lack of progress. While some researchers and managers have latched on to the concept of multifunctionality, the field still lacks a clear single metric that it can use to summarize the phenomenon. <!-- Frankly, current metrics range from the simple yet misstated to the complex and accurate yet unweildy. We acknowledge some of our own blame in this state of affairs [@Byrnes:2014fv]; although we do note that throwing even some of the finest minds against this problem in a stimulating working group format over multiple years (we are thankful for NCEAS for providing this venue) has likely resulted in more ink impregnated on foreheads hitting whiteboards than should be typical. We are similarly thankful that many in the field have continued to be critical and force us to look at our current failures with honesty [@Roger:2016bt]. -->
 
 # FABIAN TALK ABOUT LARGER FRAMEWORK AND APPLICATION TO LANDSCAPE MULTIFUNC
 
@@ -121,7 +160,7 @@ min(z$e)
 ```
 
 
-More importantly, a combined metric satisfies our definition of multfunctionality. High numbers imply both high level of function and high evenness. Low number imply that, even if a single function is being optimized, the assemblage of functions as a whole is not performing well. The relationship can also be easily decomposed into its constiuent parts for a more mechanistic examination of its behavior.
+More importantly, a combined metric satisfies our definition of multifunctionality. High numbers imply both high level of function and high evenness. Low number imply that, even if a single function is being optimized, the assemblage of functions as a whole is not performing well. The relationship can also be easily decomposed into its constiuent parts for a more mechanistic examination of its behavior.
 
 Last, from a convenience standpoint, having this single metric now allows us to begin to examine it as any other response variable. In the BEF world, we might look at additive partioning in addition to complementary overlap approaches. In global change biology, we can look at stability, resistance, and resilience. The options are open.
 
@@ -174,7 +213,7 @@ ggplot(duffy_for_plotting,
  geom_jitter(size=3, position = position_jitter(height=0, width=0.3), alpha=0.9) + 
  stat_smooth(method="lm", color="black") +
   ylab("Value") +
-  annotate("label", x=0, y=1, label = c("A", "B", "C"), label.size=0, size=8) +
+ # annotate("label", x=0, y=1, label = c("A", "B", "C"), label.size=0, size=8) +
   guides(color=FALSE)
 ```
 

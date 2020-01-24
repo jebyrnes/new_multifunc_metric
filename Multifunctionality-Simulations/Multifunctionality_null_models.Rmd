@@ -12,11 +12,16 @@ This script produces:
 
 + Figure 1
 
+```{r}
+library(devtools)
+install_github("jebyrnes/multifunc")
+```
+
 
 ```{r, "load packages", message = FALSE}
 
 library(ggplot2)
-library(Cairo)
+#library(Cairo)
 library(grid)
 library(cowplot)
 library(dplyr)
@@ -83,17 +88,27 @@ distribution = "rlnorm"
 
 
 # create function matrix
-FuncMat <- FunctionValue(specnum,funcnum, distribution, meanlog = 1, sdlog = 0.5)
+FuncMat <- FunctionValue(specnum,funcnum, distribution, meanlog = 1, sdlog = 1)
 
 ```
 
-### Plot function values and function correlations
+### Plot function distributions, values, and correlations
 ```{r, "corrplot"}
+FuncMat %>% 
+  group_by(Functions) %>% 
+  #mutate(Funcval = Funcval / max(Funcval)) %>% 
+  group_by(Species) %>% 
+  mutate(rank = dense_rank(desc(Funcval))) %>% 
+  ggplot(aes(x =rank, y = Funcval, fill = Species))+
+  geom_bar(stat="identity", colour = NA)+
+  facet_wrap( ~Species)
+  
+  
 
 FuncMat_plot <- 
   FuncMat %>% 
   group_by(Functions) %>% 
-  mutate(Funcval = (Funcval - min(Funcval)) / (max(Funcval) - min(Funcval))) %>% 
+  mutate(Funcval = Funcval / max(Funcval)) %>% 
   spread(Functions, Funcval) %>% 
   select(-Species)
   
@@ -123,8 +138,8 @@ FuncMat_plot %>% cor %>%
 ```{r, "Avfunc"}
 # code takes ~5 min to run for 15 species. Set to lower value for higher number of species! 
 
-maxrep <- choose(specnum, floor(specnum/2))
-#maxrep <- 500
+#maxrep <- choose(specnum, floor(specnum/2))
+maxrep <- 500
 
 # simulate plot x species matrix
 SpecMat <- SpeciesMatrix(specnum = specnum, maxrep = maxrep)
@@ -148,20 +163,36 @@ AvFunc <- AverageFunction(SpecMat, FuncMat,
 
 ### Standardize function values
 
-There are two main ways to standardize the function values:
+There are a couple of ways hof the values can be standardized. They are implemented in the `multifunc::getStdAndMeanFunctions` function. 
 
-+ between 0 and 1 with $x_{stand} = \frac{x - min(x)}{max(x) - min(x)}$ *this standardization stretches the function values artifically between 0 and 1 and is likely to skew the evenness. We should discourage it as Lars and I did previously*
++ by the maximum with $x_{stand} = \frac{x}{max(x)}$ --> implemented in `standardizeUnitScale`
 
-+ by the maximum with $x_{stand} = \frac{x}{max(x)}$
++ between 0 and 1 with $x_{stand} = \frac{x - min(x)}{max(x) - min(x)}$ --> not implemented in the `multifunc package`
+*this standardization stretches the function values artifically between 0 and 1 and is likely to skew the evenness. We should discourage it as Lars and I did previously*
 
-*we should briefly discuss z-cores as they are common (i.e. in that they don't work becaucse of frequencies (writing it down to think about it) and also standardization around 0 takes away the meaning of 0 = no functioning)*
++ z-score $x_{stand} = \frac{x - mean(x)}{sd(x)}$ (centering the variables to 0 and dividing by the standard deviation) --> implemented in `standardizeZScore`
+*z-cores are common but they get weird (i.e. in that they don't work becaucse of frequencies (writing it down to think about it) and also standardization around 0 takes away the meaning of 0 = no functioning)*
+
++ Hedges standardization $x_{stand} = \frac{x - min(x)}{sd(x)}$ (shifting minimum to 0 and scaling by the standard deviation) (`standardizeHedges`) --> new suggestion by Jarrett (see [#5](https://github.com/jebyrnes/new_multifunc_metric/issues/5#issuecomment-398510252))
+*I don't think we shoudl take any standardization that divides by the standard deviation. This allready punishes for uneveness...*
+
+
++ Log-ratio standardization $x_{stand} = log(x + c) - log( min(x) + c)$ (`standardizeLR`) -- new suggestion by Jarrett (see [#5](https://github.com/jebyrnes/new_multifunc_metric/issues/5#issuecomment-398510252))
+
+
 
 ```{r, "standardize"}
 # extract function names
 func.names <- as.character( unique( FuncMat$Functions))
 
-# standardize by maximum
- AvFunc[,func.names] <- apply(AvFunc[,func.names], 2, function(x) {x/max(x)})
+#choose standardization function
+standfunc <- standardizeUnitScale # by max
+#standfunc <- standardizeZScore    # Z-score
+#standfunc <- standardizeHedges    # Hedges
+#standfunc <- standardizeLR        # Log-ratio
+
+# standardize 
+AvFunc[,func.names] <- apply(AvFunc[,func.names], 2, standfunc)
 
 # alternative standardize between 0 and 1
 # AvFunc[,func.names] <- apply(AvFunc[,func.names], 2, function(x) {(x - min(x)) / (max(x) - min(x))})
@@ -183,7 +214,8 @@ SingleFunc <- AvFunc_long %>%
   stat_smooth(data = AvFunc_long, aes(x = Richness, y = FuncVal), method="lm", colour = "#de2d26") +
   xlab("\nSpecies richness") +
   ylab("Value of function\n") +
-  theme(panel.grid = element_blank(), legend.position = "none")
+  theme(panel.grid = element_blank(), legend.position = "none")+
+  scale_x_continuous(breaks = c(1:specnum))
 
 SingleFunc
 
@@ -224,12 +256,15 @@ AverageFunc
 *code copied and adapted from multifunc_new.Rmd*
 
 ```{r}
+  
 #now evenness
-AvFunc[["Functional Evenness"]] <- AvFunc %>% funcEven(func.names)
+AvFunc[["Functional Evenness"]] <- AvFunc %>% funcEven(func.names, q = 1)
 
 #Now our multifunctionality metric - I could have
 #done this as a product, but I'm guessing people will want a function
-AvFunc$Multifunctionality <- AvFunc %>% getMF(func.names)
+
+#this function standardizes the functions again. it shouldn't do that. Here I provide a unity function to avoid double standardization
+AvFunc$Multifunctionality <- AvFunc %>% getMF(func.names, standardizeFunction = function(x) (x))
 
 Multifunc_new <- 
   AvFunc %>%
@@ -284,137 +319,16 @@ correlation between average MF and MF_new
 
 ```{r}
 ggplot(AvFunc, aes(x = meanFunction, y = Multifunctionality))+
-  geom_point(alpha = 0.2)+
-  geom_smooth()
+  geom_point(alpha = 0.2, size = 0.1)+
+  stat_density2d(aes(fill = ..level..), geom = "polygon", alpha = 0.3)+
+  geom_smooth(method = "lm", se = F, size = 0.4, colour = "darkred")+
+  geom_abline(intercept = c(0,0), slope = 1)+
+  scale_fill_viridis_c()+
+  #coord_fixed()+
+  expand_limits(x = 0.15, y = 0.15)
+  NULL
+  
 ```
 
 
-## Scenario 2 - complementarity effect on 2 functions
-
-Exact same code as above, but with the `method = "comp"` chosen to simulate complementary for two functions. 
-
-### Simulate diversity experiment
-
-
-```{r, "Avfunc_comp"}
-# code takes ~5 min to run for 15 species. Set to lower value for higher number of species! 
-
-#maxrep <- choose(specnum, floor(specnum/2))
-#maxrep <- 500
-
-# simulate plot x species matrix (If not allready done for Scenario 1)
-#SpecMat <- SpeciesMatrix(specnum = specnum, maxrep = maxrep)
-
-# select method and additional parameters if appropriate by setting the `if` statement to `TRUE`
-if (FALSE) {method = "av"}
-
-if (TRUE) {method = "comp"
-            CF = 3
-            compfunc = c("F 1", "F 6")
-            r = 0.25}
-
-
-# Average function
-AvFunc <- AverageFunction(SpecMat, FuncMat,
-                          method = method, 
-                          CF = CF, 
-                          compfunc = compfunc,
-                          r = r)
-```
-
-### Standardize function values
-
-```{r, "standardize_comp"}
-# extract function names
-func.names <- as.character( unique( FuncMat$Functions))
-
-# standardize by maximum
- AvFunc[,func.names] <- apply(AvFunc[,func.names], 2, function(x) {x/max(x)})
-
-# alternative standardize between 0 and 1
-# AvFunc[,func.names] <- apply(AvFunc[,func.names], 2, function(x) {(x - min(x)) / (max(x) - min(x))})
-
-```
-
-### Plot single function values
-```{r, "single_func_comp"}
-AvFunc_long <- gather(AvFunc[, -c(1:specnum)], Function, FuncVal, -Richness) 
-
-SingleFunc_comp <- AvFunc_long %>%
-  mutate(FuncVal = round(FuncVal,3)) %>% 
-  group_by(Richness, Function, FuncVal) %>% 
-  summarize(n = n()) %>% 
-  ggplot(., aes(x=Richness, y=FuncVal, colour = n))+
-  geom_point( size = 1, position = position_jitter(width = 0.1))+
-  facet_wrap(~Function)+
-  theme_bw(base_size=15)+
-  stat_smooth(data = AvFunc_long, aes(x = Richness, y = FuncVal), method="lm", colour = "#de2d26") +
-  xlab("\nSpecies richness") +
-  ylab("Value of function\n") +
-  theme(panel.grid = element_blank(), legend.position = "none")
-
-SingleFunc_comp
-
-```
-
-### Average approach for multifunctionality
-```{r, "multifunc_av_comp"}
-
-# add averaged multifunctional index
-AvFunc$meanFunction <- rowMeans(AvFunc[,func.names])
-
-#plot it
-AverageFunc_comp <- 
-  AvFunc %>%
-  select(Richness, meanFunction) %>% 
-  mutate(meanFunction = round(meanFunction,3)) %>% 
-  group_by(Richness, meanFunction) %>% 
-  summarize(n = n()) %>% 
-  ggplot(., aes(x=Richness, y=meanFunction, colour = n))+
-  geom_point(size = 2, position = position_jitter(width = 0.1))+
-    theme_bw(base_size=15)+
-    stat_smooth(data = AvFunc, aes(x = Richness, y = meanFunction), method="lm", colour = "#de2d26") +
-    xlab("\nSpecies richness") +
-    ylab("Average value of standardized functions\n")+
-  theme(legend.position = "none")+
-   # scale_y_continuous(limits = c(0.25,0.75))+
-    scale_x_continuous(breaks = seq(1,15,2))
-
-AverageFunc_comp
-
-```
-
-### new multifunctionlity metric
-
-*code copied and adapted from multifunc_new.Rmd*
-
-```{r}
-#now evenness
-AvFunc[["Functional Evenness"]] <- AvFunc %>% funcEven(func.names)
-
-#Now our multifunctionality metric - I could have
-#done this as a product, but I'm guessing people will want a function
-AvFunc$Multifunctionality <- AvFunc %>% getMF(func.names)
-
-Multifunc_new_comp <- 
-  AvFunc %>%
-  select(Richness, meanFunction, `Functional Evenness`, Multifunctionality) %>% 
-  gather(index, value, -Richness) %>% 
-  mutate(value = round(value, 2)) %>% 
-  group_by(value, Richness, index) %>% 
-  summarise(n = n()) %>% 
-  ggplot(., aes(x=Richness, y=value, colour = n))+
-  geom_point(size = 2, 
-             position = position_jitter(width = 0.1))+
-    theme_bw(base_size=15)+
-    stat_smooth( colour = "#de2d26", se = F) +
-    facet_wrap(~index)+ 
-    xlab("\nSpecies richness") +
-    ylab("Average value of standardized functions\n")+
- # theme(legend.position = "none")+
-   # scale_y_continuous(limits = c(0.25,0.75))+
-    scale_x_continuous(breaks = seq(0,12,2))
-
-Multifunc_new_comp
-```
 
