@@ -1,6 +1,6 @@
 ---
 title: "A New Multifunc"
-date: "07 June, 2018" 
+date: "08 March, 2019" 
 bibliography: mf_metric.bib
 csl: oikos.csl
 output: 
@@ -11,9 +11,11 @@ output:
 
 #### Introduction
 
-The past decade has witnessed the growth of the concept of ecosystem **multifunctionality**. Multifunctionality is defined as a measure of the simultaneous performance of multiple functions. Note that we do not say "ecosystem functions", as multifunctionality is a broader concept that can be easily applied outside of community and ecosystem ecology - and even outside of ecology altogether. This concept has proven unifying in a number of different situations. In the Biodiversity Ecosystem Function literature, it has enabled researchers to realize that, while specific species often drive single functions, different species or functional groups often drive different functions enhancing diversity's importance as progressively more functions are considered [@Hooper:1998un; @Duffy:2003wt;  @Hector:2007gm; @Lefcheck:2015dg]. Researchers are beginning to recognize that foundation species create multifunctional landscapes [@Angelini:2015ef] that differ not only in species diversity and abundance, but ecosystem-level properties. Invasion biology has begun to use multifunctionality to quantify whole-system level changes [@Ramus:2017gn]. Multifunctionality has tremendous use to applied ecology as well. Managers often attempt to work towards the provision of multiple ecosystem services [@Nelson:2009kl, @Brandt:2014; @Binder:2018is] - fundamentally the same concept as multifunctionality - or have come to understand single ecosystem services as the sum of multiple different ecosystem functions [@Nilsson:2017gv]. Across each of these areas, we see that the concept of multifunctionality as a potential linchpin linking community and ecosystem ecology. 
+The past decade has witnessed the growth of the concept of ecosystem **multifunctionality**. Multifunctionality is defined as a measure of the simultaneous performance of multiple functions. Note that we do not say "ecosystem functions", as multifunctionality is a broader concept that can be easily applied outside of community and ecosystem ecology - and even outside of ecology altogether. This concept has proven unifying in a number of different situations. <!-- In the Biodiversity Ecosystem Function literature, it has enabled researchers to realize that, while specific species often drive single functions, different species or functional groups often drive different functions enhancing diversity's importance as progressively more functions are considered [@Hooper:1998un; @Duffy:2003wt;  @Hector:2007gm; @Lefcheck:2015dg]. --> Researchers are beginning to recognize that foundation species create multifunctional landscapes [@Angelini:2015ef] that differ not only in species diversity and abundance, but ecosystem-level properties. Invasion biology has begun to use multifunctionality to quantify whole-system level changes [@Ramus:2017gn]. Multifunctionality has tremendous use to applied ecology as well. Managers often attempt to work towards the provision of multiple ecosystem services [@Nelson:2009kl, @Brandt:2014; @Binder:2018is] - fundamentally the same concept as multifunctionality - or have come to understand single ecosystem services as the sum of multiple different ecosystem functions [@Nilsson:2017gv]. Across each of these areas, we see that the concept of multifunctionality as a potential linchpin linking community and ecosystem ecology. 
 
 However, adoption of multifunctionality as a fundamental concept providing this linchpin has been slow. Nor is there a robust theoretical core behind multifunctionality, further hindering its penetration into scientific thinking. We posit that there is at least one simple explanation behind this lack of progress. While some researchers and managers have latched on to the concept of multifunctionality, the field still lacks a clear single metric that it can use to summarize the phenomenon. Frankly, current metrics range from the simple yet misstated to the complex and accurate yet unweildy. We acknowledge some of our own blame in this state of affairs [@Byrnes:2014fv]; although we do note that throwing even some of the finest minds against this problem in a stimulating working group format over multiple years (we are thankful for NCEAS for providing this venue) has likely resulted in more ink impregnated on foreheads hitting whiteboards than should be typical. We are similarly thankful that many in the field have continued to be critical and force us to look at our current failures with honesty [@Roger:2016bt].
+
+# FABIAN TALK ABOUT LARGER FRAMEWORK AND APPLICATION TO LANDSCAPE MULTIFUNC
 
 Here we briefly review the current state of affairs, propose a solution, and discuss some of the ongoing challenges to the field, including whole conceptual fields of exploration that we feel have been entirely missed.
 
@@ -26,6 +28,8 @@ First, on the side of simplicty, taking the average of all functions [e.g., @Mae
 Second, we have metrics of the Multivariate Diversity Interactions framework [@Dooley:2015em]. This elegant framework allows us to tease apart the importance of correlations between functions and the contribution of different drivers to simultaneous change in those functions. It does not, however, provide a holistic metric of multifunctionality *per se*, much like the overlap approach before it [@Hector:2007gm] which is really a generalization of Sørenson overlap to provides key information on redundancy versus unique contributions of species. While we gain rich information about a system, we do not gain holistic interpretability.
 
 Last, we have the multiple threshold approach. This approach seeks to balance the goals of measuring the simultaneous performance of multiple ecosystem functions with the arbitrariness of choosing a threshold of relevance for those functions. We note that many who use it simply choose a single threshold, although present many in their appendicies [e.g., @Hensel:wd]. This is a reasonable choice in order to understand a single set of observations. Further, for those who do look at all thresholds, the results are, frankly, difficult to interpret as the quantities they yeild are non-obvious in their links to the concept of multifunctionality. The approach yields rich information about multifunctionality *sensu stricto*, but in so doing, becomes unweildy for most if not all who choose to use it. Related, more recent efforts have sought to use dimensionality-reducing techniques which has yielded metrics that while useful lack interpretable meaning [@Meyer:2017gj].
+
+# FABIAN ONE PARAGRAPH ON SPATIAL AND ITS NASCENT BEGINNINGS
 
 How can we solve this? What is a good metric of multifunctionality that yields the information we need in a proper holistic fashion such that we might even ultimately link it back to theory?
 
@@ -75,30 +79,62 @@ More importantly, a combined metric satisfies our definition of multfunctionalit
 
 Last, from a convenience standpoint, having this single metric now allows us to begin to examine it as any other response variable. In the BEF world, we might look at additive partioning in addition to complementary overlap approaches. In global change biology, we can look at stability, resistance, and resilience. The options are open.
 
+#### Extending the Framework to Landscape Multifunctionality
+#FABIAN
+
 #### Application to real data
+
+##### Biodiversity and Ecosystem Multifunctionality
 
 To see how this metric can be used, consider the example of Duffy et al. 2003. In this experiment, Duffy and colleagues sought to examine how biodiversity of grazers influences multiple different ecosystem functions in seagrass ecosystems. Using the functions discussed in the paper, we standardized and reflected them as per how Duffy et al. discuss their results. We then compare average functional performance, functional evenness with q=1, and our new multifunctionality metric (Figure 2).
 
 ![<b>Figure 2.</b> Three ways of looking at multifunctionality in Duffy et al. 2003. based on Periphyton biomass (wall chlorophyll a), total algal mass, grazer mass, <i>Zostera</i> final mass, sessile invertebrate mass, and sediment carbon. Colors denote different species combinations. Points are jittered horizontally to reveal overlapping data points.A) Average level of standardized functions. B) Multifunctional evenness calculated at q=1 (i.e., using Shannon Effective Number of Species). C) Multifunctionality, as defined by the product of evenness and average function.](multifunc_new_files/figure-html/duffy-1.png)
 
-
-Index                 Predictor    Slope Estimate       SE
---------------------  ----------  ---------------  -------
-Average Function      Richness             0.0261   0.0080
-Functional Evenness   Richness             0.0130   0.0064
-Multifunctionality    Richness             0.0294   0.0092
+<table class="table table-striped table-hover" style="margin-left: auto; margin-right: auto;">
+ <thead>
+  <tr>
+   <th style="text-align:left;"> Index </th>
+   <th style="text-align:left;"> Predictor </th>
+   <th style="text-align:right;"> Slope Estimate </th>
+   <th style="text-align:right;"> SE </th>
+  </tr>
+ </thead>
+<tbody>
+  <tr>
+   <td style="text-align:left;"> Average Function </td>
+   <td style="text-align:left;"> Richness </td>
+   <td style="text-align:right;"> 0.0261 </td>
+   <td style="text-align:right;"> 0.0080 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Functional Evenness </td>
+   <td style="text-align:left;"> Richness </td>
+   <td style="text-align:right;"> 0.0130 </td>
+   <td style="text-align:right;"> 0.0064 </td>
+  </tr>
+  <tr>
+   <td style="text-align:left;"> Multifunctionality </td>
+   <td style="text-align:left;"> Richness </td>
+   <td style="text-align:right;"> 0.0294 </td>
+   <td style="text-align:right;"> 0.0092 </td>
+  </tr>
+</tbody>
+</table>
 
 Comparing the three, we see that MF<sub>A</sub> and our multifunctionality metric produce broadly similar results. This result is due to evenness of function being high across most of the experiment.  Thus, the slope of the multifunctionality relationship remains tied to the average (Figure 2, Table 1). Where we do see evenness making a difference is in the lower richness plots, some of which are downweighted given their low evenness, potentially making the strength of the richness-multifunctionality relationship subtly stronger (i.e., steeper slope). Our results broadly reproduce the qualitative conclusions of Duffy et al. (2003). However, they reveal that multiple species drive multifunctionality largely from driving up the average of all functions with only small, if any, effects on functional evenness.
 
 
 
 
-[*DO WE WANT TO INCLUDE BIODEPTH, TOO?*]  
-[*DO WE WANT TO LOOK AT THE CORRELATION BETWEEN MFA AND MFE IN MORE DETAIL? I USED TO, BUT I DON'T THINK YOU GAIN ANYTHING*]  
-[*SHOULD I ELABORATE WITH MORE TEXT?*]  
+##### Landscape Multifunctionality 
+# FABIAN
 
-#### Robutness of metric
-# FABIAN DO MAGIC HERE
+##### Shiny App to Show relationships between metrics
+# FABIAN?
+
+
+#### Robutness of metrics and similarity to past metrics
+# FABIAN DO MAGIC HERE OR WRITE A DISCUSSION OF WHY THIS SATISFIES THE CONCERNS FROM YOUR FORMER PAPER
 
 #### A note on standardization
 
@@ -121,6 +157,8 @@ If researchers are interested in exploring the correlation structure of function
 One potential pitfall of this technique is to assume that it is robust to a researchers choice in what functions to measure in terms of the inferences it can deliver about a system. In an ideal world, when we quantify multifunctionality we would think of all possible functions as a population. We would then measure a random (or stratified!) sample of functions in order to draw good inferences about how a driver influences system-wide multifunctionality. To our knowledge, this type of careful thought about relevant functions from a population sampling perspective has never been applied in multifunctionality research. We hope we are wrong about this, and applaud anyone who has done so. Recently, several excellent guides to selecting standardized sets of relevant ecosystem functions have begun to appear in the literature [@Meyer:2015go; @Lefcheck:2016ho]. We suggest these as a starting point for any researchers interested in thinking carefully about the topic, in addition to fruitful discussions of with ecosystem ecologists working in the same system. They are highly likely to disabuse any community ecologist of the notion that they have fully captured a good sample of the population of relevant functions, and provide guidance on further ways to do so (J. Bowen, pers. com.).
 
 #### Conclusions
+
+#FABIAN ANYTHING ELSE HERE?
 
 We hope that this piece will provide the field of multifunctionality with a way out of its current state of division and confusion. Further, we hope it provides food for additional theory that addresses the causes and consequences of ecosystem multifunctionality, something that is currently sorely lacking. We have been heartened by the idea leaving the cradle of the field of biodiversity and ecosystem function, and feel that it has the promise to provide a holistic unifying concept for anyone interested in capturing a snapshot of system dynamics in single meaningful metric.
 
