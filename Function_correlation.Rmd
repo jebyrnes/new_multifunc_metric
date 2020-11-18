@@ -3,7 +3,7 @@ title: "R Notebook"
 output: html_notebook
 ---
 
-This script is to test the relationship between euclidian distance and correlations
+This script is to test the relationship between euclidean distance and correlations
 
 ```{r}
 library(Matrix)
@@ -14,10 +14,107 @@ library(dplyr)
 library(ggplot2)
 ```
 
+
+To take function correlation into account, we use the effective number of functional groups approach described in [chao et al 2018](https://esajournals.onlinelibrary.wiley.com/doi/abs/10.1002/ecm.1343)
+
+The code accompanying the paper can be found [here](https://github.com/AnneChao/FunD/blob/master/FunD_Rcode.txt)
+
+We copy the following function which gives us the effective number of functional groups, given 
+
+@param `data` a vector of species sample frequencies. I modified the function so that it can take raw abundances, too
+@param `dij` a matrix of species-pairwise distances.
+@param `tau` a numeric for a specified level of threshold distinctiveness.
+@param `q` a numeric for a specified diversity order q. 
+@return a numeric value of FD.
+
+```{r}
+
+FD_MLE <- function(data, dij, tau, q){
+  
+  # take relative abundance if abundance doesn't sum to 1 (added by me)
+  if(abs(sum(data) - 1) > 10e-10) {
+    data <- data/sum(data)} 
+  
+  dij <- as.matrix(dij)
+  dij[which(dij>tau,arr.ind = T)] <- tau
+  a <- as.vector((1 - dij/tau) %*% data )  
+  data <- data[a!=0]
+  a <- a[a!=0]
+  v <- data/a
+  nplus <- sum(data)
+  if(q==1){
+    exp(sum(-v*a/nplus*log(a/nplus)))
+  }else{
+    (sum(v*(a/nplus)^q))^(1 / (1-q))
+  }
+}
+
+```
+
+The value of functional diversity depends on 3 parameter
+
+1) the relative abundance of teh different species
+2) the distance between species in trait space, given by the species-species distance matrix calculated on the trait matrix
+3) the parameter tau given the threshold distinctiveness
+
+The relative abundance of species is redistributed to the different functional groups. The relative abundance of functional groups is then taken to calculate the effective number of functional groups of order q. 
+
+tau is a simple numeric parameter that defines after what distance, all distances are considered as equal. So if the species pairwise distances go from 0 (identical) to say 5 (euclidean distance is unbound) then, with a tau of 3, all species pairs with a distance >=3 would be considered equally far apart from each other. In practice, the distance matrix is simply truncated so that for d > tau d[d > tau] = tau.
+
+In the example below we have 5 species where species 1 & 2 and species 4 & 5 are functionally identical while completely distinct from each other. All species are equally abundant. 
+
+with q = 0 we get 3 functional groups (as expected)
+with q = 1 we get slightly less because the effective number of functional groups depends on the relative abundance of the functional groups (not the species) and while the species have equal abundance, the functional groups don't (0.4, 0.4, 0.2)
+
+We can also set the difference between species 3 and 2 to 0.5 (so more similar to 2 than to the rest but not identical)
+As we see this this gives us an FD of 2.57, so roughly 2.5 unique functional groups (for q = 0)
+
+however if we set tau to <= 0.5 we get an FD of 3 again. This is because by setting tau to >= 0.5 we define that all distances >= tau are equal, thus species 3 is considered equally different from 2 than from the others. 
+
+```{r}
+#vector of 10 species
+spec <- rep(0.2,5)
+
+#dist matrix (will be internally transformed to a matrix anyway so doesn't need to be class dist)
+sp_dist <- matrix(rep(1,25), nrow = 5)
+diag(sp_dist) <- 0
+sp_dist[1,2] = sp_dist[2,1] = 0
+sp_dist[4,5] = sp_dist[5,4] = 0
+
+FD_MLE(data = spec, dij = sp_dist, tau = 1, q = 0)
+FD_MLE(data = spec, dij = sp_dist, tau = 1, q = 1)
+
+sp_dist[2,3] = sp_dist[3,2] = 0.5
+FD_MLE(data = spec, dij = sp_dist, tau = 1, q = 0)
+FD_MLE(data = spec, dij = sp_dist, tau = 0.5, q = 0)
+
+```
+
+To use it as metric of multifunctionality I think we should make the following adaptations
+
++ We calculate the distance between functions using the function values across plots as traits
++ Euclidean distance is unbound and grows with the number of "traits". I think it might be better to use the correlation matrix (pearson correlation for linear correlations), which however needs transformation
+
+I see two possibilities:
+
+1) we set negative correlations to 0 and the transform the corelation matrix C to a distance matrix in the following way
+
+correlation matrix `C` and distance matrix `D`
+
+`C[C < 0] = 0` and `D = 1-C`
+
+This is the same as saying `C = C+1` ; `D = 2 - C` and setting `tau = 1`
+
+The second alternative also allows to not set all negative correlations equal but to consider negative correlations (trade-off) as less similar than simply uncorrelated functions. 
+
+Below I simulate sets of functions with increasing correlation (always 10 functions in 100 plots). I then calculate the effective number of functions as well as the functional diversity
+
+
 ```{r}
 # number of functions
 funcnum <- 10
 
+# range of average correlations among functions
 min = seq(-1,1,0.1)
 max = seq(-1,1,0.1)
 
@@ -25,6 +122,7 @@ limit_df <-
 expand_grid(min,max) %>% 
   filter(min < max)
 
+# make list of data frames with the (approximate) average correlations above
 Func_cor_list <- 
 limit_df %>% 
   mutate(split = 1:n()) %>% 
@@ -43,7 +141,7 @@ diag(M) <- 1
 sd <- rnorm(10, 5 , 2)
 M <- M* (sd %*% t(sd))
 
-#find closest positive definite covarinace matrix
+#find closest positive definite covariance matrix
 M <- nearPD(M)$mat
 
 #draw function values for 100 plots and 10 functions with the specified covariance structure
@@ -55,29 +153,36 @@ Func <- Func + abs(min(Func))
 #standardise by max
 Func <- apply(Func, 2, function(x) x/max(x))
 
-#add rownames and colnames
+#add row names and col names
 colnames(Func) <- paste("Func", 1:ncol(Func), sep = "_")
 rownames(Func) <- paste("plot", 1:nrow(Func), sep = "_")
 
 return(Func)
 })
 
-lapply(Func_cor_list, function(x) cor(x)) %>%
-  unlist() %>% 
-  data.frame(cor = `.`) %>%
-  mutate(dist = unlist(lapply(Func_cor_list, function(x) as.matrix(dist(t(x)))))) %>% 
-  ggplot(aes(x = cor, y = dist))+
-  geom_point(size = 0.6, alpha = 0.2)+
-  theme_bw()
 
+# lapply(Func_cor_list, function(x) cor(x)) %>%
+#   unlist() %>% 
+#   data.frame(cor = `.`) %>%
+#   mutate(dist = unlist(lapply(Func_cor_list, function(x) as.matrix(dist(t(x)))))) %>% 
+#   ggplot(aes(x = cor, y = dist))+
+#   geom_point(size = 0.6, alpha = 0.2)+
+#   theme_bw()
+
+# plot selected function corrplots along the gradient
 sapply(floor(seq(1,length(Func_cor_list), length.out = 9)), 
        function(x){
-         y <- Func_cor_list[[x]]
-         corrplot(cor(y), 
-                  title = paste("min = ", limit_df[x,1], "; max = ", limit_df[x,2], sep = ""))
-       })
+          
+         Func_cor_list[[x]] %>% 
+           cor %>% 
+           corrplot(title = paste("min = ", limit_df[x,1], "; max = ", limit_df[x,2], sep = ""), mar = c(1, 0, 3, 0))
+         
+       }) %>% 
+  invisible()
 
 ```
+
+Now we calculate effective number of species and FD for all plots in all data frames
 
 ```{r}
 
@@ -86,16 +191,26 @@ lapply(Func_cor_list, function(x){
   apply(x, 1, vegan::renyi, scales = 1, hill = T) #* rowMeans(x)
 })
 
+
+
 MF_effN_cor <-
 lapply(Func_cor_list, function(x){
-  D_q <- 
-  hillR::hill_func(comm = x, 
-                   traits = dist(t(x), "eu"),
-                   #traits = as.dist(cor(x)),
-                   traits_as_is = TRUE,
-                   q = 1) #* rowMeans(x)
-  D_q <- D_q[3,]
+  
+  fun_dist <- cor(x)
+  
+  # method 1 #
+  fun_dist[fun_dist < 0] <- 0
+  fun_dist = 1-fun_dist
+  #################
+  
+  
+  apply(x, 1, function(y){
+    
+    FD_MLE(y, fun_dist, tau = 1, q = 1)
+    
+  })
 })
+
 
 DF <- 
 lapply(Func_cor_list, function(x) mean(cor(x))) %>%
@@ -108,88 +223,49 @@ lapply(Func_cor_list, function(x) mean(cor(x))) %>%
 DF %>% 
   ggplot(aes(x = MF_effN,y =  MF_effN_cor, colour = cor))+
   geom_point()+
- # geom_abline(slope = 1,intercept = c(0,0))+
- # coord_equal()+
+  geom_abline(slope = 1,intercept = c(0,0))+
+  #coord_equal()+
   scale_colour_viridis_c()+
-  theme_minimal()+
-  scale_y_continuous(limits = c(6,12))+
-  scale_x_continuous(limits = c(6,12))
-  
+  theme_minimal()
+
+DF %>% 
+  ggplot(aes(x = cor, y =  MF_effN_cor, colour = MF_effN))+
+  geom_point()+
+  scale_colour_viridis_c()+
+  theme_minimal()
 ```
+
+
+Note that the general pattern is as expected. 
+
++ FD is strictly smaller than the effective number of species, 
++ FD decreases as the correlation increases. 
+
+One important point (inherent to the method and all FD methods) is however that if the correlations are all equal (e.g. all 0 or all 0.9), FD will be the same in both cases *if* tau is defined as the maximum observed distance or if the disctance matrix is standardised (as si usually done for unbound distances). 
+
+However, by taking a correlation matrix, we can define tau as absolute distance (tau = 1, corresponding to a correlation of 0) which means that we can differenatiate between all distances being 0.1 or 0.9
 
 ```{r}
-# function from http://140.114.36.3/wordpress/paper/functional%20diversity.r (Anne Chaos website)
-# Results don't make sense. 
 
-FD_MLE = function(q, data ,Dij){
-  Xi <- data[data!=0]
-  distance <- Dij[data!=0, data!=0]
-  a <- Xi/sum(Xi)
+#vector of 10 species
+spec <- rep(0.2,5)
+
+#dist matrix (will be internally transformed to a matrix anyway so doesn't need to be class dist)
+sapply(seq(0,1,0.05), function(x) {
   
-  Q = sum(distance*(a %*% t(a)))
-  
-  Emp <- function(q){
-    if(q==1){
-      Empirical = exp(-sum(empirical_q1(a, as.matrix(distance), Q)))
-    }else{
-      Empirical = sum(empirical(a, as.matrix(distance), q, Q))^(1/(1-q))
-    }
-    Empirical
-  }
-  sapply(q, Emp)
-}
-
-cppFunction(
-  "NumericMatrix empirical(NumericVector ai,NumericMatrix dij,float q,float Q){
-  const int S = ai.size();
-  NumericMatrix temp(S,S);
-  for(int i=0;i<S;i++){
-  for(int j = 0;j<S;j++){
-  temp(i,j) = dij(i,j)*pow((ai[i]*ai[j]/Q),q);
-  }
-  }
-  return(temp);
-  }")
-
-cppFunction(
-  "NumericMatrix empirical_q1(NumericVector ai,NumericMatrix dij,float Q){
-  const int S = ai.size();
-  NumericMatrix temp(S,S);
-  for(int i=0;i<S;i++){
-  for(int j = 0;j<S;j++){
-  temp(i,j) = dij(i,j)*(ai[i]*ai[j]/Q)*log(ai[i]*ai[j]/Q);
-  }
-  }
-  return(temp);
-  }")
-
-dM <- as.matrix(vegan::vegdist(test_trait))
-dM[dM > 0] <- 1
-
-dM <- matrix(rep(1,100), nrow = 10)
-diag(dM) <- 1
-
-FD_MLE(3, c(1:10)/sum(1:10), dM)
-
-vegan::renyi(c(1:10)/sum(1:10), scales = 2, hill = T)
-length(test[1,])
-
-test <- 
-  Func_cor_list$`1` %>% 
-  as.data.frame()
-
-colnames(test) <- paste("F_", 1:ncol(test), sep = "")
-
-test_trait <- t(test) %>% as.data.frame() 
-test_trait <- vegan::vegdist(test_trait)
-
-test_trait$V11 <- letters[1:nrow(test_trait)]
+  sp_dist <- matrix(rep(x,25), nrow = 5)
+  diag(sp_dist) <- 0
 
 
-hillR::hill_func(test, test_trait, traits_as_is = TRUE, checkdata = FALSE, q = 0, fdis = FALSE)
+FD_MLE(data = spec, dij = sp_dist, tau = 1, q = 0)
+}) %>% 
+  tibble(FD = .) %>% 
+  mutate(cor = seq(1,0,-0.05)) %>% 
+  ggplot(aes(x = cor, y = FD))+
+  geom_point()+
+  theme_bw() 
 
-library(Rcpp)
+
 
 ```
-
 
