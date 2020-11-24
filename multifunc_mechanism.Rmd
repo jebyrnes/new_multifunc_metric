@@ -35,7 +35,13 @@ $$
 $$
 where $\Omega$ is the correlation matrix, $\mu$ is the mean of each function, $\sigma$ is the standard deviation of each function. $\vec{z}$ is a row vector of length $m$.
 
-For example, if we assume a unit normal distribution for each function, we get
+For example, if we assume a unit normal distribution for each function and assume z is an $n \times m$ matrix
+
+$$
+\vec{F} =  \vec{N} \cdot \bf{z} \cdot \Omega^{0.5}
+$$
+
+We can see how each function depends on the correlation matrix. How that might translate into a directional effect however, I don't yet understand. 
 
 ```{r}
 n <- 10; m <- 5
@@ -84,4 +90,52 @@ ggplot(dat, aes(x = S, y = meanfunc, colour = eta, group = eta)) + geom_point() 
 ```
 
 
-At the end of this, I'm still not sure what I've achieved, but in case it helps, I'm uploading it to git...
+It is perhaps also worth folding in the work I did in last year on competition, which would influence $\vec{N}$. We could work out the composition of the community at equilibrium and use that in the equations.
+
+Using Lotka-Volterra theory we can estimate equilibrium abundances of $n$ species given a competition matrix $\mathbf{A}$ as,
+
+$$
+N^* = \vec{1} \cdot \mathbf{A}^{-1}
+$$
+where $\vec{1}$ is a row of 1s with length $n$. 
+
+
+This means that we can modify the equation for ecosystem function from above by substituting $\vec{N}$ with the equation for $N^*$
+
+
+$$
+\vec{F} =  \vec{1} \cdot \mathbf{A}^{-1} \cdot \bf{F} 
+$$
+
+And, if $\bf{z} \sim \mathcal{N}(0, 1)$ is an n x m matrix 
+
+$$
+\vec{F} =  \vec{1} \cdot \mathbf{A}^{-1} \cdot ( \mu + \bf{z} \cdot (\sigma \cdot \Omega^{0.5}\cdot \sigma^t))
+$$
+
+
+we have a general formula for the provision of multiple ecosystem functions by multiple competing species. 
+
+Because we probably lose little from assuming functions arise from a unit normal, we could get rid of $\mu$ and $\sigma$ to get a simpler equation 
+
+$$
+\vec{F} =  \vec{1} \cdot \mathbf{A}^{-1} \cdot  \bf{z} \cdot \Omega^{0.5}
+$$
+
+
+```{r}
+
+## S = no. species, a_ii is intra-specific comp,, a_ij is interspecific comp
+makeCmat  <- function(S, a_ii, a_ij)
+{
+  Alpha <-   matrix(a_ij, nr=S, nc=S) 
+  diag(Alpha) <- a_ii
+  return(Alpha)
+}
+Amat <- makeCmat(n, 0.1, 0.01)
+
+rep(1, n) %*%  solve(Amat) %*% (z)  %*% Omega
+
+```
+
+One thing that emerges from this is that the diversity-multifunctionality relationship is determined by two things, the inverse of the competition matrix and the correlations among species contributions to functions. Indeed, I think we could probably get a pretty good idea of the expected relationships by just looking at how those two matrices interact, but I'm not quite sure how to explore that yet.
