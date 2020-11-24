@@ -1,0 +1,87 @@
+---
+title: "Multifunctionality-mechanism"
+author: "Robert Bagchi"
+date: "`r format(Sys.time(), '%d %B, %Y')`"
+output: 
+  github_document:
+    toc: yes
+    toc_depth: 5
+    pandoc_args: --webtex
+  html_document:
+    keep_md: yes
+    theme: readable
+    mathjax: default
+  pdf_document:
+    toc: yes
+
+---
+
+# Rationale
+
+We can think of the relationship between species composition and function provision using the following relationship
+
+$$
+\vec{F} =  \vec{N} \cdot \bf{F} 
+$$
+Where  the rwo vector $\vec{F}$ measures the provision of each of $m$ functions and $\bf{F}$ is a $n \times m$ matrix where each row gives each species' *per capita* contribution to the ecosystem functions. $\vec{N}$ is a row vector of abundances of each species.
+
+The *multifunctionality* part of the model can be examined by expressing each row, $i$ of $\bf{F}$ as
+
+$$
+\begin{array}{lll}
+\vec{F}_{i.} \sim MVN(\mu, \Sigma) \\
+\Rightarrow \bf{F}_{i.} =  \mu + \vec{z} \cdot (\sigma \cdot \Omega^{0.5}\cdot \sigma^t),~ \vec{z} \sim \mathcal{N}(0,1)
+\end{array}
+$$
+where $\Omega$ is the correlation matrix, $\mu$ is the mean of each function, $\sigma$ is the standard deviation of each function. $\vec{z}$ is a row vector of length $m$.
+
+For example, if we assume a unit normal distribution for each function, we get
+
+```{r}
+n <- 10; m <- 5
+Omega <- rethinking::rlkjcorr(1, K =m, eta= 2) ## smaller eta is more correlation among species
+
+z <- matrix(rnorm(n*m), nr=n)
+
+Sigma <-  z %*% diag(m) %*% chol(Omega) %*% t(diag(m))
+
+F_k <- rlnorm(n) %*% Sigma
+F_k
+
+```
+
+If we want, it is easy to express this for several communities, perhaps with varying diversity (say 1 - 10 species).
+
+```{r}
+library(tidyverse)
+sp <- matrix(rlnorm(100), nr=10)
+sp[upper.tri(sp)] <- 0
+F_k <- sp %*% Sigma
+
+funcs <- data.frame(S= 1:10, f = F_k %*% rep(1/m, m))
+
+ggplot(funcs, aes(x=S, y =f)) + geom_point() + geom_smooth(method="lm") +
+  labs(x= "Species richness", y = "mean functioning") + theme_bw()
+```
+
+
+We can the do this for different values of eta.
+```{r}
+genSpFunc <- function(n, m, eta)
+{
+  Omega <- rethinking::rlkjcorr(1, K =m, eta= eta) ## smaller eta is more correlation among species
+  z <- matrix(rnorm(n*m), nr=n)
+  Sigma <-  z %*% diag(m) %*% chol(Omega) %*% t(diag(m))
+  return(Sigma)
+}
+eta <- seq(0.5, 10, len = 5)
+dat <- data.frame(eta = rep(eta, each = n), S = rep(1:n, length(eta)),  meanfunc =do.call("c", lapply(eta, function(eta, spA )
+  spA %*% genSpFunc(n, m, eta) %*% rep(1/m, m), spA = sp)))
+  
+ggplot(dat, aes(x = S, y = meanfunc, colour = eta, group = eta)) + geom_point() + 
+  geom_smooth(method = "lm") + theme_bw() + scale_colour_viridis_c() + facet_wrap(~eta)
+
+```
+
+
+At the end of this, I'm still not sure what I've achieved, but in case it helps, I'm uploading it to git...
