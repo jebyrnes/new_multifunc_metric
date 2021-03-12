@@ -29,39 +29,19 @@ source("Functions.R")
 
 #### Abstract
 
-In ecology, multifunctionality measures the simultanious provision of multiple ecosystem functions. If species diveristy describes the variety of species that together build the ecosystem, multifunctionality attempts to describe the variety of functions these species perform. A range of methods have been proposed to quantify multifunctionlity, successevely attempting to alleviate problems that have been identified with the previous method. This has led to a proliferation of more-or-less closely related metrics which, however, lack an overarching theoretical framework. Here we borrow from the comprehensive framwork of species diversity measured as effective numbers to derive a new metric of multifunctionality measured as the diversity of functions. As the effective number of species, the metric is influenced both by the number of functions as well as crucially the eveness of performance levels across functions. In addtion the effective number of functions also considers the average level at which the functions are performed. The framework allows for the inclusion of the correlation structure among functions, thus allowing to account for non-independence between functions. We show that the average metric is a special case of the newly proposed metric and argue that the threshold-based metrics should be abondoned because of fatal flaws. We hope that by providing a new metric of multifunctionality anchored in the sound and rigurous framework of species diveristy based on effective numbers, we will overcome the considerable scepticism that the larger community of ecologists has built against indicies of multifunctionality. We thereby hope to help popularize this important concept which, as biological diveristy, describes a fundamental property of ecosystems and thus lies at the heart of ecology.
+In ecology, multifunctionality measures the simultaneous provision of multiple ecosystem functions. If species diversity describes the variety of species that together build the ecosystem, multifunctionality attempts to describe the variety of functions these species perform. A range of methods have been proposed to quantify multifunctionality, successively attempting to alleviate problems that have been identified with the previous method. This has led to a proliferation of more-or-less closely related metrics which, however, lack an overarching theoretical framework. Here we borrow from the comprehensive framework of species diversity measured as effective numbers to derive a new metric of multifunctionality measured as the diversity of functions. As the effective number of species, the metric is influenced both by the number of functions as well as crucially the eveness of performance levels across functions. In addtion the effective number of functions also considers the average level at which the functions are performed. The framework allows for the inclusion of the correlation structure among functions, thus allowing to account for non-independence between functions. We show that the average metric is a special case of the newly proposed metric and argue that the threshold-based metrics should be abondoned because of fatal flaws. We hope that by providing a new metric of multifunctionality anchored in the sound and rigurous framework of species diveristy based on effective numbers, we will overcome the considerable scepticism that the larger community of ecologists has built against indicies of multifunctionality. We thereby hope to help popularize this important concept which, as biological diveristy, describes a fundamental property of ecosystems and thus lies at the heart of ecology.
 
 
 #### Introduction Fabian
 
 The past decade has witnessed the growth of the concept of ecosystem **multifunctionality**. Multifunctionality is defined as a measure of the simultaneous performance of multiple functions. Note that we do not say "ecosystem functions", as multifunctionality is a broader concept that can be easily applied outside of community and ecosystem ecology - and even outside of ecology altogether. However, despite the popularity that the concept gained since it was first explicitley proposed over a decade ago (@Hector:2007gm, @Gamfeldt:2008tqa), there is still no consesus on how multifunctionality should be quantified. A range of methods have been proposed where each subsequent method attempted to alleviate problems the authors had identified with the previous method, leading to a proliferation of metrics which cannot easily be compared and can lead to inconsistent interpretations of the results [@Byrnes:2014fv].This plurality of concepts has hampered a general understanding of multifunctionality and possibly its adoptance outside of the field of biodiveristy and ecosystem functioning.
 
-Species diversity for a long time, suffered the same problems that multifunctionality suffers today: There are a sheer uncountable number of metrics to estimate alpha diversity, reaching from the simple count of observed species without regard to their abundance (Richness), wide array of metrics incorporating the relative abundance (Shannon entropy, Simpson index or Raouls quadratic Entropy or Berger-Parker Dominance index to name some of the most commen ones), to metrics based on the historgramms of the abundace distribution (e.g. fishers alpha) [REF Magurran and Mcgill book]. Yet, starting with Mc arthur in 1952, then Hill in 1972 and finlay Lou jost in 2006 a common framework for species diversity has been develloped which encompassed the vast majority of previous metrics. The effective number of species. 
+Species diversity for a long time, suffered the same problems that multifunctionality suffers today: There are a sheer uncountable number of metrics to estimate alpha diversity, reaching from the simple count of observed species without regard to their abundance (Richness), wide array of metrics incorporating the relative abundance (Shannon entropy, Simpson index, Raouls quadratic Entropy or Berger-Parker Dominance index to name some of the most commen ones), to metrics based on the historgramms of the abundace distribution (e.g. fishers alpha) [REF Magurran and Mcgill book]. Yet, starting with Mc arthur in 1952, then Hill in 1972 and finlay Lou jost in 2006 a common framework for species diversity has been develloped which encompassed the vast majority of previous metrics. The effective number of species. 
 
+cite @holting_multifunctionality_2019 @sturck_multifunctionality_2017 and @rodriguez-loinaz_multiple_2015 here. 
 
 
 _...to the diversity of functions_
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -80,7 +60,7 @@ Here we briefly review the current state of affairs, propose a solution, and dis
 
 The definition of multifunctionality presents a challenge. How to we define a metric that captures both the level of performance of a broad suite of functions as well as the distribution of differences in performance between functions? Researchers have sought to capture this question in four ways, after standardizing functions to similar levels in order to prevent apples-to-oranges comparisons.
 
-First, on the side of simplicty, taking the average of all functions [e.g., @Maestre:2012fw]. This approach appears on its face appealing, particularly as it provides a metric that can be put on a y-axis while a predictor is on the x. However, it sacrifices crucial information about the system. An arithmetic mean tells us, were we to sample any one function, what level of functioning would we expect? Consider two plots - one where all functions are similar and performing at half their value and one where half of the functions are at their maximum while half are absent. The averaging approach says that they are identical. Geometric averaging appears to get around this problem to some degree, as a geometric mean is approximately the arithmetic mean minus the variance of observations. However, given its formulation, one critically low function can bias the measurement, nor do we always have a sufficient sample of functions to achieve that approximation.
+First, on the side of simplicity, taking the average of all functions [e.g., @Maestre:2012fw]. This approach appears on its face appealing, particularly as it provides a metric that can be put on a y-axis while a predictor is on the x. However, it sacrifices crucial information about the system. An arithmetic mean tells us, were we to sample any one function, what level of functioning would we expect? Consider two plots - one where all functions are similar and performing at half their value and one where half of the functions are at their maximum while half are absent. The averaging approach says that they are identical. Geometric averaging appears to get around this problem to some degree, as a geometric mean is approximately the arithmetic mean minus the variance of observations. However, given its formulation, one critically low function can bias the measurement, nor do we always have a sufficient sample of functions to achieve that approximation.
 
 Second, we have metrics of the Multivariate Diversity Interactions framework [@Dooley:2015em]. This elegant framework allows us to tease apart the importance of correlations between functions and the contribution of different drivers to simultaneous change in those functions. It does not, however, provide a holistic metric of multifunctionality *per se*, much like the overlap approach before it [@Hector:2007gm] which is really a generalization of Sørenson overlap to provides key information on redundancy versus unique contributions of species. While we gain rich information about a system, we do not gain holistic interpretability.
 
@@ -107,6 +87,8 @@ $$
 $$
 
 where $N_q$ is the effective number of functions for some order q. Adapting from Jost (2006), if q = 0, this is the total number of functions, S. If q<1, then functions at low level dominate the calculation. For q = 1, the approximation of this function is equivalent to results from Shannon diversity for species, $^{1}N = exp(-\sum{p_i\;log \;p_i})$. For q>1, functions performing at higher levels are given greater weight. At q = 2, we get results that are equivalent to the number of functions calculated from Simpson's diversity. If one of our goals is to up-weight high performing functions, q=2 is a reasonable choice. However, to be conservative, q=1 is sufficient, and provides a strong tool for both ecologists and managers.
+
+
 
 Effective number of functions does not accomodate knowledge about the absolute level of functioning in a system - a true metric of multifunctionality. To achieve this translation, we need to use this effective number of functions to first calculate functional evenness. This is simply the effective number of functions divided by the number of functions divided we are observing [@Jost:2010jo]. 
 
@@ -160,9 +142,9 @@ min(z$e)
 ```
 
 
-More importantly, a combined metric satisfies our definition of multifunctionality. High numbers imply both high level of function and high evenness. Low number imply that, even if a single function is being optimized, the assemblage of functions as a whole is not performing well. The relationship can also be easily decomposed into its constiuent parts for a more mechanistic examination of its behavior.
+More importantly, a combined metric satisfies our definition of multifunctionality. High numbers imply both high level of function and high evenness. Low number imply that, even if a single function is being optimized, the assemblage of functions as a whole is not performing well. The relationship can also be easily decomposed into its constiuent parts for a more mechanistic examination of its behaviour.
 
-Last, from a convenience standpoint, having this single metric now allows us to begin to examine it as any other response variable. In the BEF world, we might look at additive partioning in addition to complementary overlap approaches. In global change biology, we can look at stability, resistance, and resilience. The options are open.
+Last, from a convenience standpoint, having this single metric now allows us to begin to examine it as any other response variable. In the BEF world, we might look at additive partitioning in addition to complementary overlap approaches. In global change biology, we can look at stability, resistance, and resilience. The options are open.
 
 #### Extending the Framework to Landscape Multifunctionality
 #FABIAN
