@@ -1,0 +1,146 @@
+---
+title: 'Appendix 1: Lower Bound of Effective Number of Functions'
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+The minimum number of effective functions will occur at the minumum level of evenness (maximum level of dominance) for any set of functions. Conveniently, using a standardized scale for functions between 0 and 1, the maximum level any function can achieve is 1. If all functions, save one, are 0, then by definition the number of effective functions will be 1. After this, one function will be 1 and all functions save one other will be 0. As we increase A, this function will increase in value until it, too, is 1. At which point, as A increases, a third function will begin increasing in value, etc.
+
+Noting that AK, the average level of function multiplied by the total number of functions, is always just greater than the number of functions that are equal to 1, we can a quantity G that is the number of functions equal to 1, and is equivalent to the floor of AK (i.e., $\lfloor AK \rfloor$).
+
+For any level of A, the value of the function whose value is greater than 0 but less than 1 as AK - G, as AK is the number of functions that are 1 + the additional contribution of our non-zero other function. Therefore,
+
+$$
+\begin{equation}
+\begin{aligned} 
+&F_{1}...F_{K-G-1} = 0 \\
+&F_{K-G} = AK - G \\
+&F_{K-G+1}...F_{K} = 1
+\end{aligned} 
+\end{equation}
+$$
+
+and therefore summing up all of the functions at the maximum dominance for a given level of A,
+
+$$
+\sum F_i = 0 + AK - G + G  \\
+\Rightarrow AK 
+$$
+We can use this to determine the lower bound of the effective number of functions. Looking at $p_i$ at maximum dominance
+
+
+$$
+p_i = \frac{F_i}{\sum F_i} \\
+\Rightarrow \frac{F_i}{AK} 
+$$
+
+We can then substitute this into equation 3.
+
+$$
+^{q}N = \left[ \sum_{i=1}^{S} \frac{F_{i}}{AK}^q \right] ^ {1/(1-q)} \\
+$$
+
+$$
+\Rightarrow \left[{\frac{1}{A^q \cdot K^{q}}} \cdot \sum_{i=1}^{S}F_{i}^q \right]^{1/(1-q)}
+$$
+
+At maximum dominance we know that 
+
+$$
+\sum_{i=1}^{S}F_{i}^q  = G + (AK-G)^q
+$$
+
+So that the lower bound of effective number of functions is
+
+$$
+\tag{eqn. 9}
+^qN_{lower}(A) = \left[ \frac{G + (AK-G)^q}{A^qK^q} \right]^{1/(1-q)}
+$$
+
+For q=1, we can begin by re-arranging the limit using substituting in for $p_i$.
+
+$$
+\begin{equation}
+\begin{aligned}
+&^{1}N_{lower} = exp\left(-\sum p_i \;log\; p_i \right) \\
+&\Rightarrow exp\left(-\sum \frac{F_i}{AK} \;log\; \frac{F_i}{AK} \right)\\
+&\Rightarrow exp\left(-\frac{1}{AK}  \sum (F_i \; log \; F_i \; - F_i\; log \; AK) \right) \\
+\end{aligned}
+\end{equation}
+$$
+Taking 0 log 0 = 0 and noting that log 1 = 0, we can use our previous exploration of the three possible values for $F_i$ at maximum dominance and plug those in to the above equation to get
+
+$$
+\begin{equation}
+\begin{aligned}
+&^{1}N_{lower} =  exp\left(-\frac{1}{AK}  [(AK-G)\;log(AK-G) - G \; log AK - (AK-G) \;log\; AK] \right) \\
+&\Rightarrow  exp\left(\frac{G}{AK}\;log AK + \frac{AK-G}{AK}\;logAK - \frac{AK-G}{AK}\; log(AK-G) \right) \\
+&\Rightarrow \frac{-AK(AK-G)^\frac{(AK-G)}{AK}}{(G - AK)}
+\end{aligned}
+\end{equation}
+$$
+
+When AS-G = 0, this reduces to $AK ^ {\frac{G}{AK}}$, rather than have to divide by 0.
+
+We can write a function in R to explore this relationship between $^qN$ and A.
+
+```{r, echo = TRUE}
+get_mfn_floor <- function(a, k, q){
+  ak <- a*k
+  g <- floor(a*k)
+  
+  if(q==1){
+    if(ak-g==0){
+      #AK ^ {\frac{G}{AK}}
+      return(ak^(g/ak))
+    }
+    ret <- -1*ak*(ak-g)^(g/ak)/(g-ak)
+    ix <- is.nan(ret)
+    ret[ix] <- ak[ix]^(g[ix]/ak[ix])#exp(-1/as[ix]*(g[ix]*log(1/as[ix])))
+#    return(ret)
+  }else{
+  #\left[ \frac{G + (AK-G)^q}{A^qK^q} \right]^{1/(1-q)}
+  ret <- ( (g+(ak-g)^q)/(a^q * k^q) ) ^ (1/(1-q))
+  }
+  return(ret)
+}
+```
+
+
+We can use this function to then explore the shape of the relationship between A and possible values of $^qN$ which is reported in the text as figure 1.
+
+
+
+```{r show_conceptual, message=FALSE, warning=FALSE}
+
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+library(forcats)
+
+n_func <- 4
+
+n_range <- crossing(data.frame(a = seq(0,1,0.01)), 
+                    data.frame(q = 1:4)) %>%
+  group_by(q, a) %>%
+  mutate(n_upper=n_func, n_lower=get_mfn_floor(a, n_func, q))
+
+ggplot(n_range, aes(x=a, y=n_lower, 
+                          ymin = n_lower,
+                          ymax = n_upper,
+                          fill = fct_rev(factor(q)),
+                          color= fct_rev(factor(q)))) +
+  geom_ribbon(alpha=0.7) +
+  xlab("Average Level of Functioning") +
+  ylab("Effective Number of Functions") +
+  ylim(c(0,n_func)) +
+  scale_fill_brewer(palette="Accent") +
+  scale_color_brewer(palette="Accent") +
+  guides(color="none", fill=guide_legend("Order (q)")) +
+  theme_bw(base_size = 14)
+  
+```
+

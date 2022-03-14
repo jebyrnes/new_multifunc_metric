@@ -1,0 +1,145 @@
+---
+title: "Comparing Multifunc Metrics with Data"
+author: "Jarrett Byrnes"
+date: "9/28/2017"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Duffy et al. 2003 Example
+So, let's use these new multifunctionality metrics to look at real data. We'll start with the Duffy et al. 2003 Ecology Letters data set.
+```{r load_libraries}
+library(multifunc)
+library(dplyr)
+library(tidyr)
+library(ggplot2)
+
+data("duffy_2003")
+```
+
+This data set has a few variables used in the paper which each showed a different response. Two of these, Chl A on the walls of tanks and total algal mass need to be reflected (unreflected, lower values = higher function).
+
+```{r fix_duffy_vals}
+duffyAllVars <- qw(grazer_mass,wkall_chla,tot_algae_mass,
+                  Zost_final_mass,sessile_invert_mass,sediment_C)
+
+duffyAllVars.std <- paste0(duffyAllVars, ".std")
+#re-normalize so that everything is on the same 
+#sign-scale (e.g. the maximum level of a function is the "best" function)
+#and the dataset is cleaner
+duffy <- duffy_2003 %>%
+ dplyr::select(treatment, diversity, one_of(duffyAllVars)) %>%
+ dplyr::mutate(wkall_chla = -1*wkall_chla + max(wkall_chla, na.rm=T),
+               tot_algae_mass = -1*tot_algae_mass + max(tot_algae_mass, na.rm=T)) 
+```
+
+We can now add some metrics to this. Note, this is clunky as I'm trying to make these new functions work like others in multifunc, and this was all written before the tidyverse. So, this is ugly. I really need to re-write the whole package to be tidy. `tidymultifunc`, anyone?
+
+```{r get_mf_metrics}
+#first, mean multifunctionality
+duffy <- duffy %>%
+ cbind(getStdAndMeanFunctions(duffy, duffyAllVars)) %>%
+ rename(mf_a = meanFunction, richness=diversity)
+
+#now evenness
+duffy$mf_e <- duffy %>% funcEven(duffyAllVars.std)
+
+#effective # of functions - although, meh....
+duffy$eff_func <- duffy %>% funcDiv(duffyAllVars.std)
+
+#Now our multifunctionality metric - I could have
+#done this as a product, but I'm guessing people will want a function
+duffy$mf <- duffy %>% getMF(duffyAllVars)
+```
+
+So, let's see how these three metrics - mf, mf average, and mf evenness compare.
+
+```{r plot_metrics}
+#plots
+duffy_for_plotting <- duffy %>%
+ select(richness, treatment, mf_e, mf_a, mf) %>%
+ gather(index, value, -richness, -treatment)
+
+ggplot(duffy_for_plotting,
+      aes(x=richness, y=value, color=treatment)) +
+ facet_wrap(~index) +
+ geom_point() +
+ theme_bw(base_size=17) +
+ stat_smooth(method="lm", color="black")
+
+
+ggplot(duffy,
+       aes(x=mf_a, y=mf_e, color=factor(richness))) +
+  geom_point() +
+  theme_bw() +
+  ylim(c(0,1)) +
+  xlim(c(0,1))
+
+```
+
+
+We can see mf and mf_a aren't super different because across the whole experiment, evenness was pretty consistent, so a lot is driven by average level of function. That's.... pretty cool, actually.
+
+## Biodepth
+Let's look at the whole biodepth dataset!
+
+```{r load_iodepth}
+data("all_biodepth") 
+
+
+allVars<-qw(biomassY3, root3, N.g.m2,  light3, N.Soil, wood3, cotton3)
+
+allVars.std <- paste0(allVars, ".std")
+
+sub_biodepth <- all_biodepth %>%
+  filter(location %in% c("Germany", "Sheffield", "Portugal", "Sweden")) %>%
+  group_by(location) %>%
+  mutate(light3 <- -1*light3+max(light3, na.rm=T),
+         N.Soil = -1*N.Soil + max(N.Soil, na.rm=T))  %>% 
+  nest(.key="ndf") %>%
+  mutate(std_df = purrr::map(ndf, ~getStdAndMeanFunctions(., allVars))) %>%
+  mutate(std_df = purrr::map(std_df, ~.[,(colSums(is.na(.)))==0])) %>% #deal with unequal # of functions
+  mutate(func_df = purrr::map(ndf, ~.[,(colSums(is.na(.)))==0])) %>% #deal with unequal # of functions
+  mutate(mf_e = purrr::map(std_df, ~funcEven(., allVars.std)), 
+         mf = purrr::map(func_df, ~getMF(., allVars)),
+         mf_e_shannon = purrr::map(std_df, ~funcEven(., allVars.std, q=1)), 
+         mf_shannon = purrr::map(func_df, ~getMF(., allVars, q=1)),
+         mf_a = purrr::map(func_df, ~getStdAndMeanFunctions(., allVars)$meanFunction)) %>%
+  unnest()
+
+biodepth_for_plot <- sub_biodepth %>%
+ select(Diversity, block, location, plot, mf_e, mf_a, mf) %>%
+ gather(index, value, -Diversity, -block, -plot, -location)
+  
+ggplot(biodepth_for_plot,
+      aes(x=Diversity, y=value)) +
+ facet_grid(location~index) +
+ geom_point() +
+ theme_bw(base_size=17) +
+stat_smooth(method="lm", color="red")
+
+
+biodepth_for_plot_shannon <- sub_biodepth %>%
+ select(Diversity, block, location, plot, mf_e_shannon, mf_a, mf_shannon) %>%
+ gather(index, value, -Diversity, -block, -plot, -location)
+  
+
+ggplot(biodepth_for_plot_shannon,
+      aes(x=Diversity, y=value)) +
+ facet_grid(location~index) +
+ geom_point() +
+ theme_bw(base_size=17) +
+stat_smooth(method="lm", color="red")
+
+
+
+ggplot(sub_biodepth,
+       aes(x=mf_a, y=mf_e, color=location)) +
+  geom_point() +
+  theme_bw() +
+  ylim(c(0,1)) +
+  xlim(c(0,1))
+```
