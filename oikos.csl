@@ -143,7 +143,7 @@
           <group prefix=". - ">
             <text term="in" text-case="capitalize-first" suffix=": "/>
             <names variable="editor translator">
-              <name name-as-sort-order="all" and="text" sort-separator=", " initialize-with=". " delimiter=", " delimiter-precedes-last="never" et-al-min="3" et-al-use-first="1"/>
+              <name name-as-sort-order="all" and="text" sort-separator=", " initialize-with=". " delimiter=", " delimiter-precedes-last="never" et-al-min="200" et-al-use-first="1"/>
               <label form="short" prefix=" (" suffix=")," strip-periods="true"/>
             </names>
             <text variable="container-title" prefix=" " suffix="."/>

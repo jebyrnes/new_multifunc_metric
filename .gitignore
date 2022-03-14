@@ -3,5 +3,4 @@
 .RData
 .Ruserdata
 multifunc_new_cache/*
-*.Rproj
-*.html
+.DS_Store
