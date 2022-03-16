@@ -110,8 +110,7 @@ When AS-G = 0, this reduces to $AK ^ {\frac{G}{AK}}$, rather than having to divi
 
 *RBcomment: I think this might be wrong. Mathematica helped me derive the expression directly. It is below*
 $$
-\begin{equation}
-^{1}N_{lower} = A K (A K - G)^(\frac{G}{AK} - 1)
+^{1}N_{lower} = A K (A K - G)^{(\frac{G}{AK} - 1)}
 $$
 
 
