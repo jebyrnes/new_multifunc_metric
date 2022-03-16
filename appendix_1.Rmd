@@ -67,7 +67,7 @@ $$
 \tag{eqn. 7}
 ^qN_{lower}(A) = \left[ \frac{G + (AK-G)^q}{A^qK^q} \right]^{1/(1-q)}
 $$
-*RBcomment: I used Mathematica to get the ?*
+*RBcomment: I used Mathematica to derive qN_lower when q -> 1*
 For q=1, we can begin by re-arranging the limit by substituting in for $p_i$.
 
 $$
@@ -107,6 +107,13 @@ $$
 
 
 When AS-G = 0, this reduces to $AK ^ {\frac{G}{AK}}$, rather than having to divide by 0.
+
+*RBcomment: I think this might be wrong. Mathematica helped me derive the expression directly. It is below*
+$$
+\begin{equation}
+^{1}N_{lower} = A K (A K - G)^(\frac{G}{AK} - 1)
+$$
+
 
 We can write a function in R to explore this relationship between $^qN$ and A.
 
