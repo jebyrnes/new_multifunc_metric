@@ -14,29 +14,25 @@ Noting that $AK$, the average level of function multiplied by the total number o
 For any level of A, the value of the function whose value is greater than 0 but less than 1 is $AK - G$, as $AK$ is the number of functions that are 1 + the additional contribution of our non-zero other function. Therefore,
 
 $$
-\tag{eqn. 1}
 \begin{equation}
 \begin{aligned} 
-&F_{1}...F_{K-G-1} = 0 \\
-&F_{K-G} = AK - G \\
-&F_{K-G+1}...F_{K} = 1
+&F_{1}...F_{G} = 1 \\
+&F_{G + 1} = AK - G \\
+&F_{G+2}...F_{K} = 0
 \end{aligned} 
 \end{equation}
 $$
-*RBnote: I could work out that this worked, but it took me a bit of time. Why not do $F_1 ... F_{G} = 1$, $F_{G + 1} = AK - G$ and $F_{G+2} ... F_{K} = 0$. The formula would still work as $\sum_i F_i = G + AK + 0 = AK  $ *
 
 and therefore summing up all of the functions at the maximum dominance for a given level of $A$,
 
 $$
-\tag{eqn. 2}
-\sum F_i = 0 + AK - G + G  \\
+\sum F_i = G + AK - G + 0  \\
 \Rightarrow AK 
 $$
 We can use this to determine the lower bound of the effective number of functions. Looking at $p_i$ at maximum dominance
 
 
 $$
-\tag{eqn. 3}
 p_i = \frac{F_i}{\sum F_i} \\
 \Rightarrow \frac{F_i}{AK} 
 $$
@@ -44,34 +40,38 @@ $$
 We can then substitute this into equation 3.
 
 $$
-\tag{eqn. 4}
 ^{q}N = \left[ \sum_{i=1}^{K} \left(\frac{F_{i}}{AK}\right)^q \right] ^ {1/(1-q)} \\
 $$
 *RB note: I've changed S to K to be consistent with above*
 
 $$
-\tag{eqn. 5}
 \Rightarrow \left[{\frac{1}{A^q \cdot K^{q}}} \cdot \sum_{i=1}^{K}F_{i}^q \right]^{1/(1-q)}
 $$
 
 At maximum dominance we know that 
 
 $$
-\tag{eqn. 6}
 \sum_{i=1}^{K}F_{i}^q  = G + (AK-G)^q
 $$
 
 So that the lower bound of effective number of functions is
 
 $$
-\tag{eqn. 7}
 ^qN_{lower}(A) = \left[ \frac{G + (AK-G)^q}{A^qK^q} \right]^{1/(1-q)}
 $$
-*RBcomment: I used Mathematica to derive qN_lower when q -> 1*
-For q=1, we can begin by re-arranging the limit by substituting in for $p_i$.
+
+For q=1, we can find the lower bound by taking the limit $\lim_{q \to\ 1}$, which gives us
 
 $$
-\tag{eqn. 8}
+\lim_{q \to\ 1} ~ ^qN_{lower}(A) =  A K (A K - G)^{\frac{G}{AK} - 1}
+$$
+
+<!-- I am not sure we need this section, perhaps just delete?-->
+
+Alternatively, we can re-arranging the limit by substituting in for $p_i$.
+
+$$
+
 \begin{equation}
 \begin{aligned}
 &^{1}N_{lower} = \exp\left(-\sum p_i \;\log\; p_i \right) \\
@@ -84,23 +84,20 @@ Taking 0 log 0 = 0 and noting that log 1 = 0, we can use our previous exploratio
 
 $$
 \begin{equation}
-\tag{eqn. 9}
+
 \begin{aligned}
 &^{1}N_{lower} =  \exp\left(-\frac{1}{AK}  \Bigl[ (AK-G)\;\log(AK-G) - G \; \log AK - (AK-G) \;\log\; AK \Bigr] \right)\\
 &\Rightarrow  \exp\left(\frac{G}{AK}\;\log AK + \frac{AK-G}{AK}\;\log AK - \frac{AK-G}{AK}\; \log(AK-G) \right) \\
-&\Rightarrow \frac{-AK(AK-G)^\frac{(AK-G)}{AK}}{(G - AK)}
+&\Rightarrow A K (A K - G)^{\frac{G}{AK} - 1}
 \end{aligned}
 \end{equation}
 $$
 
 
 
-When AS-G = 0, this reduces to $AK ^ {\frac{G}{AK}}$, rather than having to divide by 0.
-
-*RBcomment: I think this might be wrong. Mathematica helped me derive the expression directly. It is below*
-$$
-^{1}N_{lower} = A K (A K - G)^{(\frac{G}{AK} - 1)}
-$$
+When $AK-G = 0$, this reduces to 0.
+<!-- $AK ^ {\frac{G}{AK}}$, rather than having to divide by 0. -->
+RBcomment: this seems like an odd result. 
 
 
 We can write a function in R to explore this relationship between $^qN$ and A.
@@ -113,10 +110,11 @@ get_mfn_floor <- function(a, k, q){
   if(q==1){
     if(ak-g==0){
       #AK ^ {\frac{G}{AK}}
-      return(ak^(g/ak))
+      return(0)
     }
-    ret <- -1*ak*(ak-g)^(g/ak)/(g-ak)
-    ix <- is.nan(ret)
+    ret <- ak*(ak-g)^(g/ak - 1 )
+    ## not sure of the ratioinale here so leaving it to @jebyrnes to fix
+    ix <- is.nan(ret) 
     ret[ix] <- ak[ix]^(g[ix]/ak[ix])#exp(-1/as[ix]*(g[ix]*log(1/as[ix])))
 #    return(ret)
   }else{
@@ -159,6 +157,11 @@ ggplot(n_range, aes(x=a, y=n_lower,
   scale_color_brewer(palette="Accent") +
   guides(color="none", fill=guide_legend("Order (q)")) +
   theme_bw(base_size = 14)
-  
+
+
+## something odd going on in the q = 1 case, I think because 
+## the equation evaluates to 0 when AK  = G. Is something off here?
+## also is it worth just plotting the lower bound and ignoring the upper bound?
+## it might make for a neater figure.
 ```
 
