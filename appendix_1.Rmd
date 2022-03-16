@@ -68,56 +68,54 @@ $$
 
 <!-- I am not sure we need this section, perhaps just delete?-->
 
-Alternatively, we can re-arranging the limit by substituting in for $p_i$.
+<!-- Alternatively, we can re-arranging the limit by substituting in for $p_i$. -->
 
-$$
+<!-- $$ -->
 
-\begin{equation}
-\begin{aligned}
-&^{1}N_{lower} = \exp\left(-\sum p_i \;\log\; p_i \right) \\
-&\Rightarrow \exp\left(-\sum \frac{F_i}{AK} \;\log\; \frac{F_i}{AK} \right)\\
-&\Rightarrow \exp\left(-\frac{1}{AK}  \sum (F_i \; \log \; F_i \; - F_i\; \log \; AK) \right) \\
-\end{aligned}
-\end{equation}
-$$
-Taking 0 log 0 = 0 and noting that log 1 = 0, we can use our previous exploration of the three possible values for $F_i$ at maximum dominance ($AK - G$) and plug those in to the above equation to get
+<!-- \begin{equation} -->
+<!-- \begin{aligned} -->
+<!-- &^{1}N_{lower} = \exp\left(-\sum p_i \;\log\; p_i \right) \\ -->
+<!-- &\Rightarrow \exp\left(-\sum \frac{F_i}{AK} \;\log\; \frac{F_i}{AK} \right)\\ -->
+<!-- &\Rightarrow \exp\left(-\frac{1}{AK}  \sum (F_i \; \log \; F_i \; - F_i\; \log \; AK) \right) \\ -->
+<!-- \end{aligned} -->
+<!-- \end{equation} -->
+<!-- $$ -->
+<!-- Taking 0 log 0 = 0 and noting that log 1 = 0, we can use our previous exploration of the three possible values for $F_i$ at maximum dominance ($AK - G$) and plug those in to the above equation to get -->
 
-$$
-\begin{equation}
+<!-- $$ -->
+<!-- \begin{equation} -->
 
-\begin{aligned}
-&^{1}N_{lower} =  \exp\left(-\frac{1}{AK}  \Bigl[ (AK-G)\;\log(AK-G) - G \; \log AK - (AK-G) \;\log\; AK \Bigr] \right)\\
-&\Rightarrow  \exp\left(\frac{G}{AK}\;\log AK + \frac{AK-G}{AK}\;\log AK - \frac{AK-G}{AK}\; \log(AK-G) \right) \\
-&\Rightarrow A K (A K - G)^{\frac{G}{AK} - 1}
-\end{aligned}
-\end{equation}
-$$
-
-
-
-When $AK-G = 0$, this reduces to 0.
-<!-- $AK ^ {\frac{G}{AK}}$, rather than having to divide by 0. -->
-RBcomment: this seems like an odd result. 
+<!-- \begin{aligned} -->
+<!-- &^{1}N_{lower} =  \exp\left(-\frac{1}{AK}  \Bigl[ (AK-G)\;\log(AK-G) - G \; \log AK - (AK-G) \;\log\; AK \Bigr] \right)\\ -->
+<!-- &\Rightarrow  \exp\left(\frac{G}{AK}\;\log AK + \frac{AK-G}{AK}\;\log AK - \frac{AK-G}{AK}\; \log(AK-G) \right) \\ -->
+<!-- &\Rightarrow A K (A K - G)^{\frac{G}{AK} - 1} -->
+<!-- \end{aligned} -->
+<!-- \end{equation} -->
+<!-- $$ -->
 
 
-We can write a function in R to explore this relationship between $^qN$ and A.
+In the limiting case of $AK \to G$, the expression becomes $AK$
+
+We can write a function in R to explore this relationship between $^qN$ and $A$.
 
 ```{r, echo = TRUE}
 get_mfn_floor <- function(a, k, q){
   ak <- a*k
   g <- floor(a*k)
+  if(a == 0)
+    return(0)
   
   if(q==1){
     if(ak-g==0){
       #AK ^ {\frac{G}{AK}}
-      return(0)
+      return(ak)
     }
     ret <- ak*(ak-g)^(g/ak - 1 )
-    ## not sure of the ratioinale here so leaving it to @jebyrnes to fix
-    ix <- is.nan(ret) 
-    ret[ix] <- ak[ix]^(g[ix]/ak[ix])#exp(-1/as[ix]*(g[ix]*log(1/as[ix])))
-#    return(ret)
-  }else{
+    ## not sure of the rationale here so leaving it to @jebyrnes to fix
+    # ix <- is.nan(ret) 
+    # ret[ix] <- ak[ix]^(g[ix]/ak[ix])#exp(-1/as[ix]*(g[ix]*log(1/as[ix])))
+    return(ret)
+  } else{
   #\left[ \frac{G + (AK-G)^q}{A^qK^q} \right]^{1/(1-q)}
   ret <- ( (g+(ak-g)^q)/(a^q * k^q) ) ^ (1/(1-q))
   }
@@ -144,24 +142,26 @@ n_range <- crossing(data.frame(a = seq(0,1,0.01)),
   group_by(q, a) %>%
   mutate(n_upper=n_func, n_lower=get_mfn_floor(a, n_func, q))
 
+#n_range$n_lower[!is.finite(n_range$n_lower)] <-  0
+
 ggplot(n_range, aes(x=a, y=n_lower, 
                           ymin = n_lower,
                           ymax = n_upper,
                           fill = fct_rev(factor(q)),
                           color= fct_rev(factor(q)))) +
-  geom_ribbon(alpha=0.7) +
+#  geom_ribbon(alpha=0.7) +
+  geom_line(size = 1.2) +
   xlab("Average Level of Functioning") +
   ylab("Effective Number of Functions") +
   ylim(c(0,n_func)) +
   scale_fill_brewer(palette="Accent") +
-  scale_color_brewer(palette="Accent") +
-  guides(color="none", fill=guide_legend("Order (q)")) +
+  #scale_color_brewer(palette="Accent") +
+  scale_color_brewer(palette="Set2") +
+  guides(fill="none", color=guide_legend("Order (q)")) +
   theme_bw(base_size = 14)
 
 
-## something odd going on in the q = 1 case, I think because 
-## the equation evaluates to 0 when AK  = G. Is something off here?
-## also is it worth just plotting the lower bound and ignoring the upper bound?
-## it might make for a neater figure.
+##  was getting NaNs when q > 1 and a = 0. I think 
+## these should just be zero as A = 0 => functioning is 0(modified above)
 ```
 
