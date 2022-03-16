@@ -93,17 +93,6 @@ $$
 \end{equation}
 $$
 
-*I think this can be simplified to*
-
-$$
-\begin{equation}
-\begin{aligned}
-&-AK((AK -G)^(\frac{AK - G}{AK}-1) \\
-&\Rightarrow -AK(AK -G)^\frac{-G}{AK}
-
-\end{aligned}
-\end{equation}
-$$
 
 
 When AS-G = 0, this reduces to $AK ^ {\frac{G}{AK}}$, rather than having to divide by 0.
