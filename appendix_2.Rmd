@@ -175,4 +175,4 @@ Qualitatively, the results do not appear to change very much, although values in
 
 ## References
 
-Duffy, J. E., Richardson, J. P. and Canuel, E. A. 2003. Grazer diversity effects on ecosystem functioning in seagrass beds. - Ecol. Lett. 6: 637–645.  https://doi.org/10.1046/j.1461-0248.2003.00474.x
+Duffy, J. E., Richardson, J. P. and Canuel, E. A. 2003. Grazer diversity effects on ecosystem functioning in seagrass beds. - Ecol. Lett. 6: 637–645. [https://doi.org/10.1046/j.1461-0248.2003.00474.x](https://doi.org/10.1046/j.1461-0248.2003.00474.x)
