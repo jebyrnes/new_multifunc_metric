@@ -188,14 +188,17 @@ duffyAllVars &lt;- qw(grazer_mass,wkall_chla,tot_algae_mass,
 #sign-scale (e.g. the maximum level of a function is the &quot;best&quot; function)
 #and the dataset is cleaner
 duffy &lt;- duffy_2003 %&gt;%
- dplyr::select(id, treatment, diversity, one_of(duffyAllVars)) %&gt;%
- dplyr::mutate(wkall_chla = -1*wkall_chla + max(wkall_chla, na.rm=T),
-               tot_algae_mass = -1*tot_algae_mass + max(tot_algae_mass, na.rm=T)) 
+ dplyr::select(id, treatment, 
+               diversity, all_of(duffyAllVars)) %&gt;%
+ dplyr::mutate(wkall_chla = -1*wkall_chla + 
+                 max(wkall_chla, na.rm=T),
+               tot_algae_mass = -1*tot_algae_mass + 
+                 max(tot_algae_mass, na.rm=T)) 
 
 # Plot functions we want
 duffy %&gt;% 
-  select(treatment, diversity, duffyAllVars) %&gt;%
-  pivot_longer(duffyAllVars) %&gt;%
+  select(treatment, diversity, all_of(duffyAllVars)) %&gt;%
+  pivot_longer(all_of(duffyAllVars)) %&gt;%
   ggplot(aes(x = diversity, y = value, 
              color = treatment)) +
   stat_summary(fun.data = mean_se) +
@@ -254,9 +257,9 @@ duffy &lt;- duffy %&gt;%
 <h2>Adjusting for correlation between functions</h2>
 <p>We can also incorporate correlation between functions to calculate effective number of functions controlling for some functions being driven by the same underlying unmeasured function - this producing lower scores for effective number of functions than would appear from our initial approach.</p>
 <p>To begin with, we will need a distance matrix based on correlations. For that, we have <code>multifunc::cor_dist()</code> which calculates a correlation matrix, subtracts it from 1 and divides by two to make a distance matrix.</p>
-<pre class="r"><code>D &lt;- cor_dist(duffy %&gt;% select(duffyAllVars.std))</code></pre>
+<pre class="r"><code>D &lt;- cor_dist(duffy %&gt;% select(all_of(duffyAllVars.std)))</code></pre>
 <p>With the approach outlined for effective multifunctionality, we need to also consider a cutoff in similarity, <span class="math inline">\(\tau\)</span>. As a default choice for functions, we use <span class="math inline">\(d_{mean}\)</span>, the average of the matrix weighted by the total frequency of function. To see what <span class="math inline">\(d_{mean}\)</span> would be, we can use <code>multifunc::dmean()</code> and then either use that in future functions, or recognize that functions default to calculating <span class="math inline">\(d_{mean}\)</span>. Other choices could be <span class="math inline">\(d_{max}\)</span> or <span class="math inline">\(d_{min}\)</span> - the minimum non-zero value of the distance matrix which can be calculated with <code>multfunc::dmin()</code> in the same way we use <code>dmean()</code> below.</p>
-<pre class="r"><code>tau &lt;- dmean(duffy %&gt;% select(duffyAllVars.std),
+<pre class="r"><code>tau &lt;- dmean(duffy %&gt;% select(all_of(duffyAllVars.std)),
              D)
 
 tau
