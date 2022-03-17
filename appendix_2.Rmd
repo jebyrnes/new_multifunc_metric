@@ -19,7 +19,7 @@ To see how effective number of functions and effective multifunctionality can be
 
 ## Data prep and initial calculations
 
-First, let's load up 
+First, let's load up the data, reflect two functions for which lower values mean higher levels of function, and make an initial plot of the functions.
 
 ```{r duffy}
 
