@@ -188,9 +188,12 @@ duffyAllVars &lt;- qw(grazer_mass,wkall_chla,tot_algae_mass,
 #sign-scale (e.g. the maximum level of a function is the &quot;best&quot; function)
 #and the dataset is cleaner
 duffy &lt;- duffy_2003 %&gt;%
- dplyr::select(id, treatment, diversity, all_of(duffyAllVars)) %&gt;%
- dplyr::mutate(wkall_chla = -1*wkall_chla + max(wkall_chla, na.rm=T),
-               tot_algae_mass = -1*tot_algae_mass + max(tot_algae_mass, na.rm=T)) 
+ dplyr::select(id, treatment, 
+               diversity, all_of(duffyAllVars)) %&gt;%
+ dplyr::mutate(wkall_chla = -1*wkall_chla + 
+                 max(wkall_chla, na.rm=T),
+               tot_algae_mass = -1*tot_algae_mass + 
+                 max(tot_algae_mass, na.rm=T)) 
 
 # Plot functions we want
 duffy %&gt;% 
