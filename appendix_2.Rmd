@@ -19,7 +19,7 @@ To see how effective number of functions and effective multifunctionality can be
 
 ## Data prep and initial calculations
 
-First, let's load up the data, reflect two functions for which lower values mean higher levels of function, and make an initial plot of the functions.
+First, let's load up the data, reflect two functions for which lower values mean higher levels of function.
 
 ```{r duffy}
 
@@ -44,7 +44,11 @@ duffy <- duffy_2003 %>%
                  max(wkall_chla, na.rm=T),
                tot_algae_mass = -1*tot_algae_mass + 
                  max(tot_algae_mass, na.rm=T)) 
+```
 
+We can then plot the functions and produce a figure similar to the one in the original manuscript - although slightly different given the reflected functions.
+
+```{r}
 # Plot functions we want
 duffy %>% 
   select(treatment, diversity, all_of(duffyAllVars)) %>%
@@ -168,3 +172,7 @@ duffy %>%
 ```
 
 Qualitatively, the results do not appear to change very much, although values incorporating correlations are lower, as expected. However, as fewer unique underlying "functions" are being affected, the results are somewhat weaker in slope.
+
+## References
+
+Duffy, J. E., Richardson, J. P. and Canuel, E. A. 2003. Grazer diversity effects on ecosystem functioning in seagrass beds. - Ecol. Lett. 6: 637–645.  https://doi.org/10.1046/j.1461-0248.2003.00474.x
