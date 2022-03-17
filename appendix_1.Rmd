@@ -42,7 +42,6 @@ We can then substitute this into equation 3.
 $$
 ^{q}N = \left[ \sum_{i=1}^{K} \left(\frac{F_{i}}{AK}\right)^q \right] ^ {1/(1-q)} \\
 $$
-*RB note: I've changed S to K to be consistent with above*
 
 $$
 \Rightarrow \left[{\frac{1}{A^q \cdot K^{q}}} \cdot \sum_{i=1}^{K}F_{i}^q \right]^{1/(1-q)}
